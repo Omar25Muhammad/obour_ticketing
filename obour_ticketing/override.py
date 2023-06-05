@@ -14,7 +14,7 @@ class CustomIssue(Issue):
     It Adds the 'after_insert' method to senf an email notification to list of people defined in the Ticketing Group document when raising an issue.
     """
     def after_insert(self):
-        group = frappe.get_doc('Ticketing Groups', self.ticketing_groups)
+        group = frappe.get_doc('Ticketing Groups', self.ticketing_group)
         emails = []
 
         for technician in group.technicians:
@@ -35,7 +35,7 @@ class CustomIssue(Issue):
 
     def update_agreement_status(self):
         # Added By Omar
-        group = frappe.get_doc('Ticketing Groups', self.ticketing_groups)
+        group = frappe.get_doc('Ticketing Groups', self.ticketing_group)
         emails = []
 
         for admin in group.administrator_data:
