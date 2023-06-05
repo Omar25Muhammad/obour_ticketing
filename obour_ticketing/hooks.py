@@ -12,6 +12,9 @@ app_license = "Copyright"
 # Includes in <head>
 # ------------------
 
+fixtures = ['Custom Field']
+
+
 # include js, css files in header of desk.html
 # app_include_css = "/assets/obour_ticketing/css/obour_ticketing.css"
 # app_include_js = "/assets/obour_ticketing/js/obour_ticketing.js"
@@ -87,9 +90,10 @@ app_license = "Copyright"
 # ---------------
 # Override standard doctype classes
 
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
+override_doctype_class = {
+	# "ToDo": "custom_app.overrides.CustomToDo",
+	"Issue": "obour_ticketing.override.CustomIssue",
+}
 
 # Document Events
 # ---------------
