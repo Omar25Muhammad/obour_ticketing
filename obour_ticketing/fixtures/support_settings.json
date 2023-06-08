@@ -1,0 +1,26 @@
+[
+ {
+  "allow_resetting_service_level_agreement": 0,
+  "close_issue_after_days": 3,
+  "docstatus": 0,
+  "doctype": "Support Settings",
+  "forum_url": null,
+  "get_latest_query": null,
+  "get_started_sections": null,
+  "greeting_subtitle": "Browse help topics",
+  "greeting_title": "We're here to help",
+  "modified": "2023-06-08 10:03:56.271500",
+  "name": "Support Settings",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "post_description_key": null,
+  "post_route_key": null,
+  "post_route_string": null,
+  "post_title_key": null,
+  "response_key_list": null,
+  "search_apis": [],
+  "show_latest_forum_posts": 0,
+  "track_service_level_agreement": 1
+ }
+]

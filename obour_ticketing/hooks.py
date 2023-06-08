@@ -12,12 +12,41 @@ app_license = "Copyright"
 # Includes in <head>
 # ------------------
 
-fixtures = ['Custom Field']
+fixtures = [
+    {
+      "dt": "Support Settings"  
+	},
+    {
+        "dt": "Custom Field",
+        "filters": [
+            [
+                "name",
+                "in",
+                [
+					"Issue-ticketing_group"
+                ]
+            ]
+        ]
+  	},
+    {
+        "dt": "Property Setter",
+        "filters": [
+            [
+                "name",
+                "in",
+                [
+					"Issue-main-quick_entry",
+					"Issue-status-options"
+                ]
+            ]
+        ]
+  	},
+]
 
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/obour_ticketing/css/obour_ticketing.css"
-# app_include_js = "/assets/obour_ticketing/js/obour_ticketing.js"
+app_include_js = "/assets/obour_ticketing/js/assign_to.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/obour_ticketing/css/obour_ticketing.css"
@@ -34,7 +63,9 @@ fixtures = ['Custom Field']
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+    "Issue" : "public/js/issue.js"
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -82,9 +113,9 @@ fixtures = ['Custom Field']
 # 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
 # }
 #
-# has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# }
+has_permission = {
+	"Issue": "obour_ticketing.event.check_doc_permissions",
+}
 
 # DocType Class
 # ---------------
@@ -110,13 +141,13 @@ override_doctype_class = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
+scheduler_events = {
 # 	"all": [
 # 		"obour_ticketing.tasks.all"
 # 	],
-# 	"daily": [
-# 		"obour_ticketing.tasks.daily"
-# 	],
+	"daily": [
+		"obour_ticketing.tasks.auto_close_tickets"
+	],
 # 	"hourly": [
 # 		"obour_ticketing.tasks.hourly"
 # 	],
@@ -126,7 +157,7 @@ override_doctype_class = {
 # 	"monthly": [
 # 		"obour_ticketing.tasks.monthly"
 # 	]
-# }
+}
 
 # Testing
 # -------
