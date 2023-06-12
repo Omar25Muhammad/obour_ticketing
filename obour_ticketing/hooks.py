@@ -14,7 +14,7 @@ app_license = "Copyright"
 
 fixtures = [
     {
-      "dt": "Support Settings"  
+    	"dt": "Support Settings"  
 	},
     {
         "dt": "Custom Field",
@@ -37,6 +37,18 @@ fixtures = [
                 [
 					"Issue-main-quick_entry",
 					"Issue-status-options"
+                ]
+            ]
+        ]
+  	},
+	{
+        "dt": "Web Form",
+        "filters": [
+            [
+                "name",
+                "in",
+                [
+					"issues"
                 ]
             ]
         ]

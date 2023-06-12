@@ -14,6 +14,14 @@ class CustomIssue(Issue):
     This class inherits from the 'Document' class of the Frappe framework and extends the functionality of the 'Issue' class of the ERPNext application.
     It Adds the 'after_insert' method to senf an email notification to list of people defined in the Ticketing Group document when raising an issue.
     """
+    def validate(self):
+        prev_status = frappe.db.get_value("Issue", self.name, "status")
+        if self.status == "Closed" and prev_status != "Closed":
+            self.db_set("agreement_status", "Fulfilled")
+        # else:
+        #     self.db_set("agreement_status", "Ongoing")
+
+
     def after_insert(self):
         group = frappe.get_doc('Ticketing Groups', self.ticketing_group)
         emails = []
@@ -65,3 +73,24 @@ class CustomIssue(Issue):
 
 
             # End Added by Eng. Omar
+
+
+    def create_communication(self):
+        communication = frappe.new_doc("Communication")
+        communication.update(
+            {
+                "communication_type": "Communication",
+                "communication_medium": "Email",
+                "sent_or_received": "Received",
+                "email_status": "Open",
+                "subject": self.subject,
+                "sender": self.raised_by,
+                "content": self.description,
+                "status": "Linked",
+                "reference_doctype": "Issue",
+                "reference_name": self.name,
+            }
+        )
+        communication.flags.ignore_permissions = True
+        communication.flags.ignore_mandatory = True
+        communication.save()

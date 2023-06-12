@@ -3,12 +3,31 @@ frappe.ui.form.on("Issue", {
     setup: function(){},
 	onload: async function(frm) {
         let assigned_users = await frm.events.get_assigned_users(frm)
-
+        console.log(assigned_users.includes(frappe.session.user), 'assigned_users.includes(frappe.session.user)');
         if(!frm.is_new()) {
             if (assigned_users.includes(frappe.session.user)){
                 frm.add_custom_button(__("Re-Assign"), () => {
-                    cur_frm.assign_to.remove(frappe.session.user)
-                    location.reload()
+                    frappe.call({
+                        method: "frappe.desk.form.assign_to.remove",
+                        args: {
+                            doctype: frm.doctype,
+                            name: frm.docname,
+                            assign_to: frappe.session.user
+                        },
+                        callback: r => {
+                            if(r.message.length == 0) {
+                                frappe.call({
+                                    method: "obour_ticketing.api.reassign_users",
+                                    args: {
+                                        docname: frm.doc.name
+                                    },
+                                    callback: r => {
+                                        setTimeout(() =>history.back(), 500)
+                                    }
+                                })
+                            };
+                        }
+                    })
                 });
             }
         }
@@ -20,10 +39,5 @@ frappe.ui.form.on("Issue", {
     },
     refresh: function(frm) {
         cur_frm.remove_custom_button("Task", "Create")
-    },
-    _assign: function(frm) {
-        console.log("@@@@@@@@@@@@@@@@@@@@@@@@");
-        console.log("@@@@@@@@@@@@@@@@@@@@@@@@");
-        console.log("@@@@@@@@@@@@@@@@@@@@@@@@");
     },
 });
