@@ -3,9 +3,8 @@ frappe.ui.form.on("Issue", {
     setup: function(){},
 	onload: async function(frm) {
         let assigned_users = await frm.events.get_assigned_users(frm)
-        console.log(assigned_users.includes(frappe.session.user), 'assigned_users.includes(frappe.session.user)');
         if(!frm.is_new()) {
-            if (assigned_users.includes(frappe.session.user)){
+            if ((assigned_users || []).includes(frappe.session.user)){
                 frm.add_custom_button(__("Re-Assign"), () => {
                     frappe.call({
                         method: "frappe.desk.form.assign_to.remove",

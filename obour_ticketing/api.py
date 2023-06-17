@@ -1,5 +1,7 @@
 
 import frappe
+from frappe.utils import cint
+from frappe import sendmail
 
 @frappe.whitelist()
 def get_users(txt, doctype, docname, searchfield="name"):
@@ -59,3 +61,41 @@ def get_customer(user):
         if len(customer):
             return customer [0]
     return False
+
+def check_priority(doc, method):
+    """create a priority if not exists"""
+
+    if not frappe.db.exists("Issue Priority", doc.priority):
+        issue_priority = frappe.new_doc("Issue Priority")
+        issue_priority.name = doc.priority
+        issue_priority.flags.ignore_permission = True
+        issue_priority.save()
+        frappe.db.commit()
+
+def send_email_issue_initiator(doc, method):
+    if cint(doc.via_customer_portal):
+        email_accounts = frappe.get_list("Email Account", {"enable_outgoing": 1, "default_outgoing": 1})
+        sender = None
+        if any(email_accounts):
+            sender = email_accounts[0].name
+        if sender:
+            sendmail(
+                recipients=[frappe.session.user],
+                sender=sender,
+                subject="New Ticket was Opened",
+                message="No Message"
+            )
+
+def update_website_context(context):
+    portal_items = [
+    {
+        "title": "Issues",
+		"route": "/issues",
+		"reference_doctype": "Issue",
+		"role": "Ticket Initiatior"
+    }
+]
+    context["sidebar_items"] = portal_items
+    context["splash_image"]  = "/assets/obour_ticketing/img/logo.png"
+    context["favicon"]       = "/assets/obour_ticketing/img/logo.png"
+    context["banner_image"]  = "/assets/obour_ticketing/img/logo.png"

@@ -34,8 +34,9 @@ frappe.ui.form.AssignToDialog.prototype.get_fields = function() {
         },
         {
             label: __("Complete By"),
-            fieldtype: 'Date',
-            fieldname: 'date'
+            fieldtype: 'Datetime',
+            fieldname: 'date',
+            default: cur_frm.doc.resolution_by
         },
         {
             fieldtype: 'Column Break'
@@ -56,10 +57,14 @@ frappe.ui.form.AssignToDialog.prototype.get_fields = function() {
                 {
                     value: 'High',
                     label: __('High')
+                },
+                {
+                    value: 'Critical',
+                    label: __('Critical')
                 }
             ],
             // Pick up priority from the source document, if it exists and is available in ToDo
-            default: ["Low", "Medium", "High"].includes(me.frm && me.frm.doc.priority ? me.frm.doc.priority : 'Medium')
+            default: ["Low", "Medium", "High", "Critical"].includes(me.frm && me.frm.doc.priority ? me.frm.doc.priority : 'Medium')
         },
         // {
         //     fieldtype: 'Section Break'
@@ -72,3 +77,29 @@ frappe.ui.form.AssignToDialog.prototype.get_fields = function() {
     ];
     return fields;
 };
+
+frappe.ui.form.AssignTo.prototype.add = function(){
+		var me = this;
+
+		if (this.frm.is_new()) {
+			frappe.throw(__("Please save the document before assignment"));
+			return;
+		}
+
+		if (!me.assign_to) {
+			me.assign_to = new frappe.ui.form.AssignToDialog({
+				method: "frappe.desk.form.assign_to.add",
+				doctype: me.frm.doctype,
+				docname: me.frm.docname,
+				frm: me.frm,
+				callback: function (r) {
+					me.render(r.message);
+                    me.frm.set_value("status", "In Progress");
+                    me.frm.refresh_fields();
+                    me.frm.save();
+				}
+			});
+		}
+		me.assign_to.dialog.clear();
+		me.assign_to.dialog.show();
+}

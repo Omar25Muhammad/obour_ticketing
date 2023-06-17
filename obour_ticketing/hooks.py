@@ -12,9 +12,16 @@ app_license = "Copyright"
 # Includes in <head>
 # ------------------
 
+update_website_context = [
+	"obour_ticketing.api.update_website_context",
+]
+
 fixtures = [
     {
-    	"dt": "Support Settings"  
+        "dt": "Role",
+        "filters": [
+            ["name", "in", ["Ticket Initiatior"]]
+		]
 	},
     {
         "dt": "Custom Field",
@@ -36,7 +43,11 @@ fixtures = [
                 "in",
                 [
 					"Issue-main-quick_entry",
-					"Issue-status-options"
+					"Issue-status-options",
+                    
+					"Portal Settings-hide_standard_menu-default",
+                    
+					"Support Settings-close_issue_after_days-default"
                 ]
             ]
         ]
@@ -99,6 +110,8 @@ doctype_js = {
 # automatically create page for each record of this doctype
 # website_generators = ["Web Page"]
 
+# Migration
+after_migrate = "obour_ticketing.migrate.after_migrate"
 # Installation
 # ------------
 
@@ -142,13 +155,12 @@ override_doctype_class = {
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-#	}
-# }
+doc_events = {
+	"Issue": {
+		"before_insert": "obour_ticketing.api.check_priority",
+		"after_insert": "obour_ticketing.api.send_email_issue_initiator",
+	}
+}
 
 # Scheduled Tasks
 # ---------------
