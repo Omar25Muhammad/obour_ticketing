@@ -68,23 +68,18 @@ def check_priority(doc, method):
     if not frappe.db.exists("Issue Priority", doc.priority):
         issue_priority = frappe.new_doc("Issue Priority")
         issue_priority.name = doc.priority
-        issue_priority.flags.ignore_permission = True
+        issue_priority.flags.ignore_permissions = True
         issue_priority.save()
         frappe.db.commit()
 
 def send_email_issue_initiator(doc, method):
+    """send email for issue initiator 'customer' after create issue"""
     if cint(doc.via_customer_portal):
-        email_accounts = frappe.get_list("Email Account", {"enable_outgoing": 1, "default_outgoing": 1})
-        sender = None
-        if any(email_accounts):
-            sender = email_accounts[0].name
-        if sender:
-            sendmail(
-                recipients=[frappe.session.user],
-                sender=sender,
-                subject="New Ticket was Opened",
-                message="No Message"
-            )
+        sendmail(
+            recipients=[frappe.session.user],
+            subject="New Ticket was Opened",
+            message="Test Message"
+        )
 
 def update_website_context(context):
     portal_items = [
@@ -92,7 +87,7 @@ def update_website_context(context):
         "title": "Issues",
 		"route": "/issues",
 		"reference_doctype": "Issue",
-		"role": "Ticket Initiatior"
+		"role": "Ticket Initiator"
     }
 ]
     context["sidebar_items"] = portal_items
