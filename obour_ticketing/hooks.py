@@ -20,7 +20,7 @@ fixtures = [
     {
         "dt": "Role",
         "filters": [
-            ["name", "in", ["Ticket Initiatior"]]
+            ["name", "in", ["Ticket Initiator"]]
 		]
 	},
     {
@@ -136,13 +136,10 @@ after_migrate = "obour_ticketing.migrate.after_migrate"
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
-has_permission = {
-	"Issue": "obour_ticketing.event.check_doc_permissions",
+permission_query_conditions = {
+	"Issue": "obour_ticketing.event.get_permission_query_conditions",
 }
+#
 
 # DocType Class
 # ---------------

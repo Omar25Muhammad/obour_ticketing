@@ -1,15 +1,13 @@
 
 import frappe
 
-def check_doc_permissions(doc, user):
-    techniquies = frappe.get_list("Ticketing User Table", {"parent": doc.ticketing_group}, pluck="user_email")
-    issue = frappe.get_doc("Issue", doc.name)
-    assignments = list(issue.get_assigned_users())
+def get_permission_query_conditions(user):
+    if user == "Administrator":
+        return ""
 
-    if doc.is_new() or len(assignments) == 0 or user in assignments:
-        return True
+    ticketing_group = frappe.get_all("Ticketing User Table", filters={"user_email": user}, pluck="parent")
+    ticketing_group=",".join(["'{}'".format(item_group) for item_group in ticketing_group])
+    if ticketing_group:
+        return """`tabIssue`.ticketing_group in ({})""".format(ticketing_group)
     else:
-        return False
-
-    # if len(assignments) == 0:
-    #     return False
+        return "1=2"
