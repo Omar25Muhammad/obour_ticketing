@@ -1,0 +1,97 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:group_name",
+ "creation": "2023-05-30 11:48:15.697338",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "group_name",
+  "column_break_2",
+  "reporting_to",
+  "section_break_12",
+  "technicians",
+  "section_break_2",
+  "supervisor_data",
+  "section_break_4",
+  "administrator_data"
+ ],
+ "fields": [
+  {
+   "fieldname": "group_name",
+   "fieldtype": "Data",
+   "label": "Group Name",
+   "unique": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_2",
+   "fieldtype": "Section Break",
+   "label": "Supervisor Data"
+  },
+  {
+   "fieldname": "supervisor_data",
+   "fieldtype": "Table",
+   "label": "Supervisor Data",
+   "options": "Ticketing Supervisor Table"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_4",
+   "fieldtype": "Section Break",
+   "label": "Administrator Data"
+  },
+  {
+   "fieldname": "administrator_data",
+   "fieldtype": "Table",
+   "label": "Administrator Data",
+   "options": "Ticketing Administrator Table"
+  },
+  {
+   "fieldname": "reporting_to",
+   "fieldtype": "Link",
+   "label": "Reporting To",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_12",
+   "fieldtype": "Section Break",
+   "label": "Technicians Info"
+  },
+  {
+   "fieldname": "technicians",
+   "fieldtype": "Table",
+   "label": "Technicians",
+   "options": "Ticketing User Table"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2023-06-04 11:20:59.683681",
+ "modified_by": "Administrator",
+ "module": "Obour Ticketing",
+ "name": "Ticketing Groups",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

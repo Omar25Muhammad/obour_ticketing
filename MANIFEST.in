@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include obour_ticketing *.css
+recursive-include obour_ticketing *.csv
+recursive-include obour_ticketing *.html
+recursive-include obour_ticketing *.ico
+recursive-include obour_ticketing *.js
+recursive-include obour_ticketing *.json
+recursive-include obour_ticketing *.md
+recursive-include obour_ticketing *.png
+recursive-include obour_ticketing *.py
+recursive-include obour_ticketing *.svg
+recursive-include obour_ticketing *.txt
+recursive-exclude obour_ticketing *.pyc

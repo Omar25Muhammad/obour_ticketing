@@ -1,0 +1,45 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2023-05-30 13:34:23.466186",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "user_email",
+  "column_break_2",
+  "user_name"
+ ],
+ "fields": [
+  {
+   "fieldname": "user_email",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User Email",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "user_email.full_name",
+   "fieldname": "user_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "User Name",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2023-05-30 13:34:23.466186",
+ "modified_by": "Administrator",
+ "module": "Obour Ticketing",
+ "name": "Ticketing User Table",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}
