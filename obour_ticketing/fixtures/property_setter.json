@@ -66,5 +66,22 @@
   "property_type": "Text",
   "row_name": null,
   "value": "3"
+ },
+ {
+  "default_value": null,
+  "doc_type": "ToDo",
+  "docstatus": 0,
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "priority",
+  "modified": "2023-06-18 09:59:15.099707",
+  "name": "ToDo-priority-options",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "property": "options",
+  "property_type": "Text",
+  "row_name": null,
+  "value": "Critical\nHigh\nMedium\nLow"
  }
 ]

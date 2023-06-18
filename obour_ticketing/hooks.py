@@ -47,7 +47,9 @@ fixtures = [
                     
 					"Portal Settings-hide_standard_menu-default",
                     
-					"Support Settings-close_issue_after_days-default"
+					"Support Settings-close_issue_after_days-default",
+                    
+					"ToDo-priority-options"
                 ]
             ]
         ]
