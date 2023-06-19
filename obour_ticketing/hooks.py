@@ -53,19 +53,7 @@ fixtures = [
                 ]
             ]
         ]
-  	},
-	{
-        "dt": "Web Form",
-        "filters": [
-            [
-                "name",
-                "in",
-                [
-					"issues"
-                ]
-            ]
-        ]
-  	},
+  	}
 ]
 
 
@@ -156,8 +144,12 @@ override_doctype_class = {
 
 doc_events = {
 	"Issue": {
-		"before_insert": "obour_ticketing.api.check_priority",
-		"after_insert": "obour_ticketing.api.send_email_issue_initiator",
+		"before_insert": "obour_ticketing.api.check_priority_and_type",
+		"after_insert": [
+            			"obour_ticketing.api.send_email_issue_initiator",
+                   		"obour_ticketing.api.send_email_ticket_group"
+                        ],
+        "on_update": "obour_ticketing.api.send_email_issue_status",
 	}
 }
 
