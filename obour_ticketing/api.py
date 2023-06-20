@@ -1,7 +1,7 @@
 
 import frappe
 from frappe.utils import cint
-from frappe import sendmail
+from frappe import sendmail, _
 
 @frappe.whitelist()
 def get_users(txt, doctype, docname, searchfield="name"):
@@ -135,6 +135,56 @@ def send_email_issue_status(doc, method):
             subject=subject,
             message=message
         )
+
+def send_notification(doc, method):
+    if not doc.get_doc_before_save():
+        return
+    prev_status = doc.get_doc_before_save().status
+    current_status = doc.status
+
+    if prev_status != current_status:
+        recipients = get_recipients(doc)
+        recipients = list(set(recipients))
+        from frappe.utils import get_url_to_form
+
+        doc_link = get_url_to_form("Issue", doc.name)
+        for user in recipients:
+            if not frappe.db.exists("User", user):
+                continue
+            if user.lower() == "administrator":
+                continue
+
+            notify_log = frappe.new_doc("Notification Log")
+            notify_log.subject = f"""
+                Ticket <b>{doc.name} </b>: Status Changed <br> From <b>{prev_status}</b> to <b>{current_status}</b>
+                """
+            notify_log.for_user = user
+            notify_log.type = "Alert"
+            notify_log.email_content = f"""<a href="{doc_link}" style="cursor: pointer">{doc.name}</a>"""
+            notify_log.insert(ignore_permissions=True)
+
+def send_slack_notification(doc, method):
+    import requests
+    import json
+
+    url = frappe.db.get_value("Slack Webhook URL", doc.ticketing_group, "webhook_url")
+    if not url:
+        url = frappe.db.get_value("Slack Webhook URL", "General", "webhook_url")
+
+    if not url:
+        frappe.msgprint(_("Failed to send message to Slack. Please Set Slack Webhook URL"), alert=True)
+        return
+
+    payload = {"text": "Hello, World Test Message!"}
+    headers = {"Content-type": "application/json"}
+
+    response = requests.post(url, data=json.dumps(payload), headers=headers)
+
+    # Check the response status
+    if response.status_code == 200:
+        frappe.msgprint(_("Message sent successfully to Slack!"), alert=True)
+    else:
+        frappe.msgprint(_("Failed to send message to Slack. Status code: {}".format(response.status_code)), alert=True)
 
 def update_website_context(context):
     portal_items = [

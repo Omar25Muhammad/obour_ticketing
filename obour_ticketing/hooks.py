@@ -149,7 +149,11 @@ doc_events = {
             			"obour_ticketing.api.send_email_issue_initiator",
                    		"obour_ticketing.api.send_email_ticket_group"
                         ],
-        "on_update": "obour_ticketing.api.send_email_issue_status",
+        "on_update": [
+            			"obour_ticketing.api.send_email_issue_status",
+            			"obour_ticketing.api.send_notification",
+            			"obour_ticketing.api.send_slack_notification",
+                      ],
 	}
 }
 
