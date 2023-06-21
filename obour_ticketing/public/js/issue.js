@@ -37,6 +37,16 @@ frappe.ui.form.on("Issue", {
         return JSON.parse(_assign)
     },
     refresh: function(frm) {
-        cur_frm.remove_custom_button("Task", "Create")
+        frm.remove_custom_button("Task", "Create")
     },
+    status: function (frm) {
+        if (frm.doc.status == __('Resolved') || frm.doc.status == __('Closed')) {
+            frm.set_df_property("resolution_details", "reqd", true);
+            frm.refresh_field('resolution_details')
+        }
+        else {
+            frm.set_df_property("resolution_details", "reqd", false);
+            frm.refresh_field('resolution_details')
+        }
+    }
 });
