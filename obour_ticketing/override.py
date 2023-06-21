@@ -20,6 +20,7 @@ class CustomIssue(Issue):
             self.db_set("agreement_status", "Fulfilled")
         # else:
         #     self.db_set("agreement_status", "Ongoing")
+        super().validate()
 
 
     def after_insert(self):

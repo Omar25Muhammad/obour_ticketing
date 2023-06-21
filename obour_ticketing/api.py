@@ -1,6 +1,6 @@
 
 import frappe
-from frappe.utils import cint
+from frappe.utils import cint, get_url_to_form
 from frappe import sendmail, _
 
 @frappe.whitelist()
@@ -64,19 +64,20 @@ def get_customer(user):
 
 def check_priority_and_type(doc, method):
     """create a priority or type if not exists"""
-    if not frappe.db.exists("Issue Priority", doc.priority):
-        issue_priority = frappe.new_doc("Issue Priority")
-        issue_priority.name = doc.priority
-        issue_priority.flags.ignore_permissions = True
-        issue_priority.save()
-        frappe.db.commit()
-
-    if not frappe.db.exists("Issue Type", doc.issue_type):
-        issue_type = frappe.new_doc("Issue Type")
-        issue_type.__newname = doc.issue_type
-        issue_type.flags.ignore_permissions = True
-        issue_type.save()
-        frappe.db.commit()
+    if doc.priority:
+        if not frappe.db.exists("Issue Priority", doc.priority):
+            issue_priority = frappe.new_doc("Issue Priority")
+            issue_priority.name = doc.priority
+            issue_priority.flags.ignore_permissions = True
+            issue_priority.save()
+            frappe.db.commit()
+    if doc.issue_type:
+        if not frappe.db.exists("Issue Type", doc.issue_type):
+            issue_type = frappe.new_doc("Issue Type")
+            issue_type.__newname = doc.issue_type
+            issue_type.flags.ignore_permissions = True
+            issue_type.save()
+            frappe.db.commit()
     
     # set raised by field = current user
     doc.raised_by = frappe.session.user
@@ -145,9 +146,8 @@ def send_notification(doc, method):
     if prev_status != current_status:
         recipients = get_recipients(doc)
         recipients = list(set(recipients))
-        from frappe.utils import get_url_to_form
-
         doc_link = get_url_to_form("Issue", doc.name)
+
         for user in recipients:
             if not frappe.db.exists("User", user):
                 continue
