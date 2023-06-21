@@ -2,6 +2,7 @@
 import frappe
 from frappe.utils import cint, get_url_to_form
 from frappe import sendmail, _
+from frappe.desk.form.assign_to import add
 
 @frappe.whitelist()
 def get_users(txt, doctype, docname, searchfield="name"):
@@ -44,6 +45,15 @@ def reassign_users(docname):
                 subject="Issue Un Assigned !",
                 message="Issue: {} Has no Technicians Assignment!".format(frappe.bold(issue.name))
             )
+    if len(ticketing_group.supervisor_data):
+        args = {
+            "assign_to": [ticketing_group.supervisor_data[0].supervisor_email or ""],
+            "doctype": "Issue",
+            "name": issue.name,
+            "description": "Escalate ....",
+        }
+        add(args)
+
 
 @frappe.whitelist()
 def get_customer(user):

@@ -106,7 +106,7 @@ after_migrate = "obour_ticketing.migrate.after_migrate"
 # ------------
 
 # before_install = "obour_ticketing.install.before_install"
-# after_install = "obour_ticketing.install.after_install"
+after_install = "obour_ticketing.install.after_install"
 
 # Uninstallation
 # ------------
@@ -167,9 +167,12 @@ scheduler_events = {
 	"daily": [
 		"obour_ticketing.tasks.auto_close_tickets"
 	],
-# 	"hourly": [
-# 		"obour_ticketing.tasks.hourly"
-# 	],
+
+    "cron": {
+        "*/15 * * * *": [
+			"obour_ticketing.tasks.send_slack_notification"
+		],
+	}
 # 	"weekly": [
 # 		"obour_ticketing.tasks.weekly"
 # 	]

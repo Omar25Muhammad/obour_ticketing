@@ -23,7 +23,7 @@
  "is_standard": 1,
  "login_required": 1,
  "max_attachment_size": 1,
- "modified": "2023-06-19 14:57:30.405861",
+ "modified": "2023-06-21 15:55:41.345538",
  "modified_by": "Administrator",
  "module": "Obour Ticketing",
  "name": "issues",
@@ -175,6 +175,18 @@
    "max_length": 0,
    "max_value": 0,
    "read_only": 0,
+   "reqd": 0,
+   "show_in_filter": 0
+  },
+  {
+   "allow_read_on_all_link_options": 0,
+   "fieldname": "resolved_note",
+   "fieldtype": "Small Text",
+   "hidden": 0,
+   "label": "Resolved Note",
+   "max_length": 0,
+   "max_value": 0,
+   "read_only": 1,
    "reqd": 0,
    "show_in_filter": 0
   }

@@ -10,7 +10,8 @@
   "column_break_2",
   "admin_email",
   "column_break_4",
-  "request_type"
+  "request_type",
+  "slack_url"
  ],
  "fields": [
   {
@@ -40,12 +41,17 @@
    "in_list_view": 1,
    "label": "Request Type",
    "options": "Issue Type"
+  },
+  {
+   "fieldname": "slack_url",
+   "fieldtype": "Small Text",
+   "label": "Slack Webhook URL"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2023-06-04 11:28:27.531351",
+ "modified": "2023-06-21 12:15:24.695423",
  "modified_by": "Administrator",
  "module": "Obour Ticketing",
  "name": "Ticketing Administrator Table",
