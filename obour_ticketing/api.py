@@ -46,13 +46,17 @@ def reassign_users(docname):
                 message="Issue: {} Has no Technicians Assignment!".format(frappe.bold(issue.name))
             )
     if len(ticketing_group.supervisor_data):
-        args = {
-            "assign_to": [ticketing_group.supervisor_data[0].supervisor_email or ""],
-            "doctype": "Issue",
-            "name": issue.name,
-            "description": "Escalate ....",
-        }
-        add(args)
+        supervisor = ticketing_group.supervisor_data[0].supervisor_email or ""
+        if frappe.db.exists("User", supervisor):
+            args = {
+                "assign_to": [supervisor],
+                "doctype": "Issue",
+                "name": issue.name,
+                "description": "Escalate ....",
+            }
+            add(args)
+        else:
+            frappe.msgprint(_("Supervisor {} does not exists").format(frappe.bold(supervisor)))
 
 
 @frappe.whitelist()
