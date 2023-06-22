@@ -47,12 +47,14 @@ frappe.ui.form.on("Issue", {
     // },
     status: function (frm) {
         if (frm.doc.status == __('Resolved') || frm.doc.status == __('Closed')) {
-            frm.set_df_property("resolution_details", "reqd", true);
+            frm.doc.resolution_details = ""
             frm.refresh_field('resolution_details')
+            frm.set_df_property("resolution_details", "reqd", true);
         }
         else {
-            frm.set_df_property("resolution_details", "reqd", false);
+            frm.doc.resolution_details = __("The Solution Will be Here ...")
             frm.refresh_field('resolution_details')
+            frm.set_df_property("resolution_details", "reqd", false);
         }
     }
 });
