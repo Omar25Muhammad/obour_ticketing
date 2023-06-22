@@ -3,6 +3,7 @@ import frappe
 from frappe.utils import cint, get_url_to_form
 from frappe import sendmail, _
 from frappe.desk.form.assign_to import add
+from obour_ticketing.tasks import send
 
 @frappe.whitelist()
 def get_users(txt, doctype, docname, searchfield="name"):
@@ -47,6 +48,8 @@ def reassign_users(docname):
             )
     if len(ticketing_group.supervisor_data):
         supervisor = ticketing_group.supervisor_data[0].supervisor_email or ""
+        supervisor_slack_url = [d.slack_url for d in ticketing_group.supervisor_data]
+
         if frappe.db.exists("User", supervisor):
             args = {
                 "assign_to": [supervisor],
@@ -55,6 +58,11 @@ def reassign_users(docname):
                 "description": "Escalate ....",
             }
             add(args)
+
+        if len(supervisor_slack_url):
+            for row in supervisor_slack_url:
+                msg = f"Issue : {docname} UN-Assigned ..."
+                send(row, msg)
         else:
             frappe.msgprint(_("Supervisor {} does not exists").format(frappe.bold(supervisor)))
 

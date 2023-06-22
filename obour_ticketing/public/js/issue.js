@@ -1,7 +1,12 @@
 
 frappe.ui.form.on("Issue", {
-    setup: function(){},
-	onload: async function(frm) {
+    // setup: function(frm){
+        
+    // },
+	refresh: async function(frm) {
+        // remove create button
+        frm.remove_custom_button("Task", "Create")
+
         let assigned_users = await frm.events.get_assigned_users(frm)
         if(!frm.is_new()) {
             if ((assigned_users || []).includes(frappe.session.user)){
@@ -21,7 +26,8 @@ frappe.ui.form.on("Issue", {
                                         docname: frm.doc.name
                                     },
                                     callback: r => {
-                                        setTimeout(() =>history.back(), 500)
+                                        location.reload();
+                                        // setTimeout(() =>history.back(), 500)
                                     }
                                 })
                             };
@@ -36,9 +42,9 @@ frappe.ui.form.on("Issue", {
         const _assign = await user_assign.message._assign
         return JSON.parse(_assign)
     },
-    refresh: function(frm) {
-        frm.remove_custom_button("Task", "Create")
-    },
+    // refresh: function(frm) {
+    //     frm.remove_custom_button("Task", "Create")
+    // },
     status: function (frm) {
         if (frm.doc.status == __('Resolved') || frm.doc.status == __('Closed')) {
             frm.set_df_property("resolution_details", "reqd", true);
