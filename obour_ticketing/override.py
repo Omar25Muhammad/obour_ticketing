@@ -24,22 +24,23 @@ class CustomIssue(Issue):
 
 
     def after_insert(self):
-        group = frappe.get_doc('Ticketing Groups', self.ticketing_group)
-        emails = []
+        pass
+        # group = frappe.get_doc('Ticketing Groups', self.ticketing_group)
+        # emails = []
 
-        for technician in group.technicians:
-            emails.append(technician.user_email)
-            # frappe.sendmail(recipients=technician.user_email, subject='New Issue!', message=f'New Issue with ID: {self.name} has raised by {self.raised_by}', delayed=False)
+        # for technician in group.technicians:
+        #     emails.append(technician.user_email)
+        #     # frappe.sendmail(recipients=technician.user_email, subject='New Issue!', message=f'New Issue with ID: {self.name} has raised by {self.raised_by}', delayed=False)
 
-        for admin in group.administrator_data:
-            emails.append(admin.admin_email)
-            # frappe.sendmail(recipients=admin.admin_email, subject='New Issue!', message=f'New Issue with ID: {self.name} has raised by {self.raised_by}', delayed=False)
+        # for admin in group.administrator_data:
+        #     emails.append(admin.admin_email)
+        #     # frappe.sendmail(recipients=admin.admin_email, subject='New Issue!', message=f'New Issue with ID: {self.name} has raised by {self.raised_by}', delayed=False)
 
-        for supervisor in group.supervisor_data:
-            emails.append(supervisor.supervisor_email)
-            # frappe.sendmail(recipients=supervisor.supervisor_email, subject='New Issue!', message=f'New Issue with ID: {self.name} has raised by {self.raised_by}', delayed=False)
+        # for supervisor in group.supervisor_data:
+        #     emails.append(supervisor.supervisor_email)
+        #     # frappe.sendmail(recipients=supervisor.supervisor_email, subject='New Issue!', message=f'New Issue with ID: {self.name} has raised by {self.raised_by}', delayed=False)
 
-        frappe.sendmail(recipients=emails, subject='New Issue!', message=f'New Issue with ID: {self.name} has raised by {self.raised_by}', delayed=False)
+        # frappe.sendmail(recipients=emails, subject='New Issue!', message=f'New Issue with ID: {self.name} has raised by {self.raised_by}', delayed=False)
         # With disapling delay of sending the email, this's gonna seem to be affected the speed of creating the document (Issue).
 
 

@@ -1,8 +1,8 @@
 
 frappe.ui.form.on("Issue", {
-    // setup: function(frm){
-        
-    // },
+    onload: function(frm){
+        frm.remove_custom_button("Task", "Create")
+    },
 	refresh: async function(frm) {
         // remove create button
         frm.remove_custom_button("Task", "Create")
@@ -42,9 +42,6 @@ frappe.ui.form.on("Issue", {
         const _assign = await user_assign.message._assign
         return JSON.parse(_assign)
     },
-    // refresh: function(frm) {
-    //     frm.remove_custom_button("Task", "Create")
-    // },
     status: function (frm) {
         if (frm.doc.status == __('Resolved') || frm.doc.status == __('Closed')) {
             frm.doc.resolution_details = ""

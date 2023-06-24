@@ -23,7 +23,7 @@
  "is_standard": 1,
  "login_required": 1,
  "max_attachment_size": 1,
- "modified": "2023-06-22 10:50:30.548740",
+ "modified": "2023-06-24 14:58:42.186239",
  "modified_by": "Administrator",
  "module": "Obour Ticketing",
  "name": "issues",
@@ -180,7 +180,7 @@
   },
   {
    "allow_read_on_all_link_options": 0,
-   "default": "The Solution Will be Here ...",
+   "default": "",
    "fieldname": "resolution_details",
    "fieldtype": "Text Editor",
    "hidden": 0,

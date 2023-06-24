@@ -30,7 +30,9 @@ fixtures = [
                 "name",
                 "in",
                 [
-					"Issue-ticketing_group"
+					"Issue-ticketing_group",
+                    "Service Level Priority-notify_response_time",
+                    "Service Level Priority-notify_resolution_time"
                 ]
             ]
         ]
@@ -44,11 +46,8 @@ fixtures = [
                 [
 					"Issue-main-quick_entry",
 					"Issue-status-options",
-                    
 					"Portal Settings-hide_standard_menu-default",
-                    
 					"Support Settings-close_issue_after_days-default",
-                    
 					"ToDo-priority-options"
                 ]
             ]
@@ -154,7 +153,10 @@ doc_events = {
             			"obour_ticketing.api.send_notification",
             			"obour_ticketing.api.send_slack_notification",
                       ],
-	}
+	},
+    "User": {
+        "after_insert": "obour_ticketing.api.add_ticket_role",
+	},
 }
 
 # Scheduled Tasks
@@ -166,6 +168,7 @@ scheduler_events = {
 # 	],
 	"daily": [
 		"obour_ticketing.tasks.auto_close_tickets"
+		"obour_ticketing.tasks.ticket_summary",
 	],
 
     "cron": {

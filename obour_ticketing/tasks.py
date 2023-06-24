@@ -3,6 +3,7 @@ import frappe
 import requests
 import json
 from frappe import _
+from frappe.utils import add_to_date, now_datetime
 
 def auto_close_tickets():
     """Auto-close Resolved support tickets after 3 days"""
@@ -30,41 +31,46 @@ def auto_close_tickets():
 
 def send_slack_notification():
     resp_issues = frappe.db.sql("""
-            SELECT name, ticketing_group, priority, response_by, resolution_by, TIMESTAMPDIFF(HOUR, response_by, NOW()) response,
-            TIMESTAMPDIFF(HOUR, resolution_by, NOW()) resolution
-            FROM tabIssue WHERE status='Open'
-            """, as_dict=True)
-
-    # in values [0.25 => response time, 1 => resolution time]
-    issue_priority = {
-        "Critical": [0.25, 1],
-        "High": [2, 8],
-        "Medium": [12, 48],
-        "Low": [42, 168]
-    }
+        SELECT iss.name, iss.ticketing_group, iss.priority, iss.service_level_agreement,
+            slap.notify_resolution_time, slap.notify_response_time,
+            iss.response_by_variance, iss.response_by, iss.resolution_by_variance, iss.resolution_by
+        FROM tabIssue iss
+        LEFT JOIN `tabService Level Priority` slap
+            ON iss.service_level_agreement=slap.parent
+            AND iss.priority=slap.priority
+        WHERE iss.status='Open'
+        """, as_dict=True)
 
     if len(resp_issues):
         for issue in resp_issues:
-            supervisors = frappe.get_all("Ticketing Supervisor Table", filters={"parent": issue.ticketing_group}, pluck="slack_url")
-            admins = frappe.get_all("Ticketing Administrator Table", filters={"parent": issue.ticketing_group}, pluck="slack_url")
-            recipents = supervisors + admins
-            if issue.response_by:
-                # send notification for supervisor & administrator
-                if len(recipents) > 0:
-                    if issue.response > issue_priority[issue.priority][0]:
-                        send_recipents(recipents, issue, True)
-                    if issue.resolution > issue_priority[issue.priority][1]:
-                        send_recipents(recipents, issue, False)
-                else:
-                    pass
-                    # frappe.msgprint(_("Please set Salck URL for Administrator/Supervisor in Group {} !".format(issue.ticketing_group)), alert=True)
+            if not issue.service_level_agreement: continue
+            sla = frappe.get_doc("Service Level Agreement", issue.service_level_agreement)
+            issue_priority = {}
+            if not sla: continue
+            if len(sla.priorities) == 0: continue
+            for row in sla.priorities:
+                # in values [0.25 => response time, 1 => resolution time]
+                issue_priority[row.priority] = [row.notify_response_time, row.notify_resolution_time]
+            if not issue_priority: continue
+            response_time = add_to_date(issue.response_by, hours=issue.notify_response_time)
+            resolution_time = add_to_date(issue.resolution_by, hours=issue.notify_resolution_time)
+
+            if response_time >= now_datetime():
+                supervisors = frappe.get_all("Ticketing Supervisor Table", filters={"parent": issue.ticketing_group}, pluck="slack_url")
+                if len(supervisors) > 0:
+                    send_recipents(supervisors, issue, True)
+
+            if resolution_time >= now_datetime():
+                admins = frappe.get_all("Ticketing Administrator Table", filters={"parent": issue.ticketing_group}, pluck="slack_url")
+                if len(admins) > 0:
+                    send_recipents(admins, issue, False)
 
 def send_recipents(recipents, issue, is_response):
     for slack_url in recipents:
         if is_response:
-            msg = f"Hello, Ticket With ID: {issue.name} without response!"
+            msg = f"Hello, Ticket With ID: {issue.name} without response since {now()}!"
         else:
-            msg = f"Hello, Ticket With ID: {issue.name} resolution time ended!"
+            msg = f"Hello, Ticket With ID: {issue.name} resolution time ended since {now()}!"
 
         send(slack_url, msg)
 
@@ -77,3 +83,29 @@ def send(slack_url, msg):
         frappe.msgprint(_("Message sent successfully to Slack!"), alert=True)
     else:
         frappe.msgprint(_("Failed to send message to Slack. Status code: {}".format(response.status_code)), alert=True)
+
+def ticket_summary():
+    """send daily summary about a ticket"""
+    opened_ticket = frappe.db.sql("""
+        SELECT COUNT(iss.name) as total, iss.ticketing_group
+        FROM tabIssue iss
+        LEFT JOIN `tab`
+        WHERE status='Open'
+        GROUP BY ticketing_group
+    """, as_dict=True)
+    resolved_ticket = frappe.db.sql("""
+        SELECT COUNT(name) as total, ticketing_group
+        FROM tabIssue
+        WHERE status='Resolved'
+        GROUP BY ticketing_group
+    """, as_dict=True)
+    closed_ticket = frappe.db.sql("""
+        SELECT COUNT(name) as total, ticketing_group
+        FROM tabIssue
+        WHERE status='Closed'
+        GROUP BY ticketing_group
+    """, as_dict=True)
+
+    # frappe.sendmail(
+    #     recipents
+    # )

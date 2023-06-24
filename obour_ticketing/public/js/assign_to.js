@@ -64,16 +64,8 @@ frappe.ui.form.AssignToDialog.prototype.get_fields = function() {
                 }
             ],
             // Pick up priority from the source document, if it exists and is available in ToDo
-            default: ["Low", "Medium", "High", "Critical"].includes(me.frm && me.frm.doc.priority ? me.frm.doc.priority : 'Medium')
+            default: cur_frm.doc.priority
         },
-        // {
-        //     fieldtype: 'Section Break'
-        // },
-        // {
-        //     label: __("Comment"),
-        //     fieldtype: 'Small Text',
-        //     fieldname: 'description'
-        // }
     ];
     return fields;
 };

@@ -61,11 +61,10 @@ def reassign_users(docname):
 
         if len(supervisor_slack_url):
             for row in supervisor_slack_url:
-                msg = f"Issue : {docname} UN-Assigned ..."
+                msg = f"Issue : {docname} Escalate to you ..."
                 send(row, msg)
         else:
             frappe.msgprint(_("Supervisor {} does not exists").format(frappe.bold(supervisor)))
-
 
 @frappe.whitelist()
 def get_customer(user):
@@ -164,49 +163,38 @@ def send_notification(doc, method):
         return
     prev_status = doc.get_doc_before_save().status
     current_status = doc.status
+    prev_priority = doc.get_doc_before_save().priority
+    current_priority = doc.priority
+    recipients = get_recipients(doc)
+    doc_link = get_url_to_form("Issue", doc.name)
+    url = frappe.db.get_value("Ticketing Groups", doc.ticketing_group, "slack_url")
+    msg = ""
 
     if prev_status != current_status:
-        recipients = get_recipients(doc)
-        recipients = list(set(recipients))
-        doc_link = get_url_to_form("Issue", doc.name)
-
-        for user in recipients:
-            if not frappe.db.exists("User", user):
-                continue
-            if user.lower() == "administrator":
-                continue
-
-            notify_log = frappe.new_doc("Notification Log")
-            notify_log.subject = f"""
-                Ticket <b>{doc.name} </b>: Status Changed <br> From <b>{prev_status}</b> to <b>{current_status}</b>
-                """
-            notify_log.for_user = user
-            notify_log.type = "Alert"
-            notify_log.email_content = f"""<a href="{doc_link}" style="cursor: pointer">{doc.name}</a>"""
-            notify_log.insert(ignore_permissions=True)
+        msg = f"""
+            Ticket <b>{doc.name} </b>: Status Changed <br> From <b>{prev_status}</b> to <b>{current_status}</b>
+            """
+        create_notification_log(recipients, msg, doc, doc_link)
+        # send slack notification 
+        if url:
+            send(url, msg)
+    if prev_priority != current_priority:
+        msg = f"""
+            Ticket <b>{doc.name} </b>: priority Changed <br> From <b>{prev_priority}</b> to <b>{current_priority}</b>
+            """
+        create_notification_log(recipients, msg, doc, doc_link)
+        # send slack notification 
+        if url:
+            send(url, msg)
 
 def send_slack_notification(doc, method):
-    import requests
-    import json
-
-    url = frappe.db.get_value("Slack Webhook URL", doc.ticketing_group, "webhook_url")
+    url = frappe.db.get_value("Ticketing Groups", doc.ticketing_group, "slack_url")
     if not url:
-        url = frappe.db.get_value("Slack Webhook URL", "General", "webhook_url")
-
-    if not url:
-        frappe.msgprint(_("Failed to send message to Slack. Please Set Slack Webhook URL"), alert=True)
+        frappe.msgprint(_("Failed to send message to Slack. Please Set Slack Webhook URL in Group"), alert=True)
         return
 
-    payload = {"text": "Hello, World Test Message!"}
-    headers = {"Content-type": "application/json"}
-
-    response = requests.post(url, data=json.dumps(payload), headers=headers)
-
-    # Check the response status
-    if response.status_code == 200:
-        frappe.msgprint(_("Message sent successfully to Slack!"), alert=True)
-    else:
-        frappe.msgprint(_("Failed to send message to Slack. Status code: {}".format(response.status_code)), alert=True)
+    msg = f"Ticket: {doc.name} updated ... "
+    send(url, msg)
 
 def update_website_context(context):
     portal_items = [
@@ -229,4 +217,27 @@ def get_recipients(doc):
     admins = frappe.get_all("Ticketing Administrator Table", filters={"parent": doc.ticketing_group}, pluck="admin_email")
 
     recipients = technicians + supervisors + admins
+    if doc.raised_by:
+        recipients.append(doc.raised_by)
+    recipients = list(set(recipients))
     return recipients
+
+def add_ticket_role(doc, method):
+    """Add ticket initiator role to new users"""
+    if frappe.db.exists("Role", "Ticket Initiator"):
+        doc.add_roles("Ticket Initiator")
+        doc.save()
+        frappe.db.commit()
+
+def create_notification_log(recipients, msg, doc, doc_link):
+    for user in recipients:
+        if not frappe.db.exists("User", user):
+            continue
+        if user.lower() == "administrator":
+            continue
+        notify_log = frappe.new_doc("Notification Log")
+        notify_log.subject = msg
+        notify_log.for_user = user
+        notify_log.type = "Alert"
+        notify_log.email_content = f"""<a href="{doc_link}" style="cursor: pointer">{doc.name}</a>"""
+        notify_log.insert(ignore_permissions=True)
