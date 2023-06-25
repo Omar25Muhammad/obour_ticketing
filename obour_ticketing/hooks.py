@@ -168,13 +168,15 @@ scheduler_events = {
 # 	],
 	"daily": [
 		"obour_ticketing.tasks.auto_close_tickets"
-		"obour_ticketing.tasks.ticket_summary",
 	],
 
     "cron": {
         "*/15 * * * *": [
 			"obour_ticketing.tasks.send_slack_notification"
 		],
+        "0 23 * * *": [
+            "obour_ticketing.tasks.ticket_summary"
+		]
 	}
 # 	"weekly": [
 # 		"obour_ticketing.tasks.weekly"
