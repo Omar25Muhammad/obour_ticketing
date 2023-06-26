@@ -4,6 +4,7 @@ import requests
 import json
 from frappe import _
 from frappe.utils import add_to_date, now_datetime, today
+import re
 
 def auto_close_tickets():
     """Auto-close Resolved support tickets after 3 days"""
@@ -87,17 +88,21 @@ def send(slack_url, msg):
 def ticket_summary():
     """send daily summary about ticket"""
     tickets = frappe.db.sql("""
-        SELECT COUNT(iss.name) as total, iss.ticketing_group, iss.status, tg.reporting_to
+    SELECT G.reporting_to, GROUP_CONCAT(G.total, ' ', G.status SEPARATOR ' and ') msg
+    FROM
+        (SELECT COUNT(iss.name) as total, iss.ticketing_group, iss.status, tg.reporting_to
         FROM tabIssue iss
         LEFT JOIN `tabTicketing Groups` tg ON tg.name=iss.ticketing_group
         WHERE DATE(iss.creation)='{}'
-        GROUP BY iss.ticketing_group, iss.status
+        GROUP BY iss.ticketing_group, iss.status) AS G
+        GROUP BY G.reporting_to
     """.format(today()), as_dict=True)
 
     if any(tickets):
         for ticket in tickets:
+            msg = re.sub(r'(\d+)', r'( \1 )', ticket.msg)
             frappe.sendmail(
                 recipients = [ticket.reporting_to],
-                subject    = f"Daily {ticket.status} Ticket Report",
-                message    = f"You Have a {ticket.total} tickets {ticket.status} today"
+                subject    = f"Daily Ticket Report",
+                message    = f"You Have a {msg} tickets today"
             )
