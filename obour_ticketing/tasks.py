@@ -3,7 +3,7 @@ import frappe
 import requests
 import json
 from frappe import _
-from frappe.utils import add_to_date, now_datetime, today
+from frappe.utils import add_to_date, now_datetime, today, now
 import re
 
 def auto_close_tickets():
