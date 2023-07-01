@@ -17,6 +17,7 @@ update_website_context = [
 ]
 
 fixtures = [
+    "Issue Type",
     {
         "dt": "Role",
         "filters": [
