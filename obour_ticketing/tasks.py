@@ -104,5 +104,6 @@ def ticket_summary():
             frappe.sendmail(
                 recipients = [ticket.reporting_to],
                 subject    = f"Daily Ticket Report",
-                message    = f"You Have a {msg} tickets today"
+                message    = f"You Have a {msg} tickets today",
+                delayed=False
             )

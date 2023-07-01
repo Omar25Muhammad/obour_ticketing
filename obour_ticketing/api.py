@@ -44,7 +44,8 @@ def reassign_users(docname):
             frappe.sendmail(
                 recipients=recipients,
                 subject="Issue Un Assigned !",
-                message="Issue: {} Has no Technicians Assignment!".format(frappe.bold(issue.name))
+                message="Issue: {} Has no Technicians Assignment!".format(frappe.bold(issue.name)),
+                delayed=False
             )
     if len(ticketing_group.supervisor_data):
         supervisor = ticketing_group.supervisor_data[0].supervisor_email or ""
@@ -109,7 +110,8 @@ def send_email_issue_initiator(doc, method):
         sendmail(
             recipients=[frappe.session.user],
             subject="Your Ticket has Opened in system",
-            message="Test Message"
+            message="Test Message",
+            delayed=False
         )
 
 def send_email_ticket_group(doc, method):
@@ -119,7 +121,8 @@ def send_email_ticket_group(doc, method):
         sendmail(
             recipients=recipients,
             subject="New Ticket was Opened {0} for {1} Ticket Group".format(doc.name, doc.ticketing_group),
-            message="Test Message"
+            message="Test Message",
+            delayed=False
         )
 
 def send_email_issue_status(doc, method):
@@ -155,7 +158,8 @@ def send_email_issue_status(doc, method):
         sendmail(
             recipients=recipients,
             subject=subject,
-            message=message
+            message=message,
+            delayed=False
         )
 
 def send_notification(doc, method):
