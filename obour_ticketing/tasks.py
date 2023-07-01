@@ -30,6 +30,7 @@ def auto_close_tickets():
 
     frappe.db.commit()
 
+@frappe.whitelist()
 def send_slack_notification():
     resp_issues = frappe.db.sql("""
         SELECT iss.name, iss.ticketing_group, iss.priority, iss.service_level_agreement,
@@ -56,12 +57,12 @@ def send_slack_notification():
             response_time = add_to_date(issue.response_by, hours=issue.notify_response_time)
             resolution_time = add_to_date(issue.resolution_by, hours=issue.notify_resolution_time)
 
-            if response_time >= now_datetime():
+            if response_time <= now_datetime():
                 supervisors = frappe.get_all("Ticketing Supervisor Table", filters={"parent": issue.ticketing_group}, pluck="slack_url")
                 if len(supervisors) > 0:
                     send_recipents(supervisors, issue, True)
 
-            if resolution_time >= now_datetime():
+            if resolution_time <= now_datetime():
                 admins = frappe.get_all("Ticketing Administrator Table", filters={"parent": issue.ticketing_group}, pluck="slack_url")
                 if len(admins) > 0:
                     send_recipents(admins, issue, False)
