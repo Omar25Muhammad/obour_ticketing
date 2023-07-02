@@ -210,7 +210,7 @@ def update_website_context(context):
 ]
     context["sidebar_items"] = portal_items
     context["splash_image"]  = "/assets/obour_ticketing/img/logo.png"
-    context["favicon"]       = "/assets/obour_ticketing/img/logo.png"
+    context["favicon"]       = "/assets/obour_ticketing/img/favico.png"
     context["banner_image"]  = "/assets/obour_ticketing/img/logo.png"
 
 def get_recipients(doc):

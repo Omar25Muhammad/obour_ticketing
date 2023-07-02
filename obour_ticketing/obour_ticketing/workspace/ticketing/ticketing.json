@@ -12,8 +12,18 @@
  "is_default": 0,
  "is_standard": 1,
  "label": "Ticketing",
- "links": [],
- "modified": "2023-05-30 11:37:01.093358",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Ticketing Issue Type",
+   "link_to": "Ticketing Issue Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2023-07-02 15:35:19.623518",
  "modified_by": "Administrator",
  "module": "Obour Ticketing",
  "name": "Ticketing",
@@ -37,6 +47,18 @@
    "doc_view": "",
    "label": "Issue Priority",
    "link_to": "Issue Priority",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "",
+   "label": "Ticketing Groups",
+   "link_to": "Ticketing Groups",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "",
+   "label": "Service Level Agreement",
+   "link_to": "Service Level Agreement",
    "type": "DocType"
   }
  ]
