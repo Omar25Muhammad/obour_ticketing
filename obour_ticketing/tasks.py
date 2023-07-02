@@ -3,7 +3,7 @@ import frappe
 import requests
 import json
 from frappe import _
-from frappe.utils import add_to_date, now_datetime, today, now
+from frappe.utils import add_to_date, now_datetime, today
 import re
 
 def auto_close_tickets():
@@ -49,6 +49,9 @@ def send_slack_notification():
             sla = frappe.get_doc("Service Level Agreement", issue.service_level_agreement)
             issue_priority = {}
             if not sla: continue
+            # set response and resolution status and send slack notification now .
+            set_response_resolution_status(issue)
+
             if len(sla.priorities) == 0: continue
             for row in sla.priorities:
                 # in values [0.25 => response time, 1 => resolution time]
@@ -60,19 +63,19 @@ def send_slack_notification():
             if response_time <= now_datetime():
                 supervisors = frappe.get_all("Ticketing Supervisor Table", filters={"parent": issue.ticketing_group}, pluck="slack_url")
                 if len(supervisors) > 0:
-                    send_recipents(supervisors, issue, True)
+                    send_recipents(supervisors, issue, response_time, True)
 
             if resolution_time <= now_datetime():
                 admins = frappe.get_all("Ticketing Administrator Table", filters={"parent": issue.ticketing_group}, pluck="slack_url")
                 if len(admins) > 0:
-                    send_recipents(admins, issue, False)
+                    send_recipents(admins, issue, resolution_time, False)
 
-def send_recipents(recipents, issue, is_response):
+def send_recipents(recipents, issue, time, is_response):
     for slack_url in recipents:
         if is_response:
-            msg = f"Hello, Ticket With ID: {issue.name} without response since {now()}!"
+            msg = f"Hello, Ticket With ID: {issue.name} without response since {issue.response_by}!"
         else:
-            msg = f"Hello, Ticket With ID: {issue.name} resolution time ended since {now()}!"
+            msg = f"Hello, Ticket With ID: {issue.name} resolution time ended since {issue.resolution_by}!"
 
         send(slack_url, msg)
 
@@ -108,3 +111,27 @@ def ticket_summary():
                 message    = f"You Have a {msg} tickets today",
                 delayed=False
             )
+
+def set_response_resolution_status(issue):
+    """change response & resolution status based on sla timer and send slack notification"""
+    url = frappe.db.get_value("Ticketing Groups", issue.ticketing_group, "slack_url")
+    msg = "Ticket {issue_name} still opened"
+
+    if url:
+        if issue.response_by and now_datetime() > issue.response_by:
+            frappe.db.set_value("Issue", issue.name, "response_status", "Overdue")
+            frappe.db.commit()
+            msg = f"Ticket: {issue.name} has got no response in time!"
+            send(url, msg)
+        else:
+            frappe.db.set_value("Issue", issue.name, "response_status", "Still")
+            frappe.db.commit()
+
+        if issue.resolution_by and now_datetime() > issue.resolution_by:
+            frappe.db.set_value("Issue", issue.name, "resolution_status", "Overdue")
+            frappe.db.commit()
+            msg = f"Ticket: {issue.name} was not resolved in time!"
+            send(url, msg)
+        else:
+            frappe.db.set_value("Issue", issue.name, "resolution_status", "Still")
+            frappe.db.commit()

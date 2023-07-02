@@ -62,17 +62,17 @@ class CustomIssue(Issue):
                 cint(frappe.db.get_value("Issue", self.name, "response_by_variance")) < 0
                 or cint(frappe.db.get_value("Issue", self.name, "resolution_by_variance")) < 0
             ):
-
                 self.agreement_status = "Failed"
                 # Added by Eng. Omar
-                frappe.sendmail(recipients=emails, subject='Failed Issue!', message=f'Issue with ID: {self.name} raised by {self.raised_by} has failed!', delayed=False)
+                if len(emails) > 0:
+                    frappe.sendmail(recipients=emails, subject='Failed Issue!', message=f'Issue with ID: {self.name} raised by {self.raised_by} has failed!', delayed=False)
 
             # End Added by Eng. Omar
         else:
             self.agreement_status = "Fulfilled"
             # Added by Eng. Omar
-            frappe.sendmail(recipients=emails, subject='Fulfilled Issue!', message=f'Issue with ID: {self.name} raised by {self.raised_by} has Fulfilled!', delayed=False)
-
+            if len(emails) > 0:
+                frappe.sendmail(recipients=emails, subject='Fulfilled Issue!', message=f'Issue with ID: {self.name} raised by {self.raised_by} has Fulfilled!', delayed=False)
 
             # End Added by Eng. Omar
 

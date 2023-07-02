@@ -121,8 +121,7 @@ def send_email_ticket_group(doc, method):
         sendmail(
             recipients=recipients,
             subject="New Ticket was Opened {0} for {1} Ticket Group".format(doc.name, doc.ticketing_group),
-            message="Test Message",
-            delayed=False
+            message="Test Message"
         )
 
 def send_email_issue_status(doc, method):

@@ -143,17 +143,17 @@ override_doctype_class = {
 # Hook on document methods and events
 
 doc_events = {
-	"Issue": {
-		"before_insert": "obour_ticketing.api.check_priority_and_type",
-		"after_insert": [
-            			"obour_ticketing.api.send_email_issue_initiator",
-                   		"obour_ticketing.api.send_email_ticket_group"
+    "Issue": {
+        "before_insert": "obour_ticketing.api.check_priority_and_type",
+        "after_insert": [
+                    	"obour_ticketing.api.send_email_issue_initiator",
+                        "obour_ticketing.api.send_email_ticket_group"
                         ],
         "on_update": [
-            			"obour_ticketing.api.send_email_issue_status",
-            			"obour_ticketing.api.send_notification",
-            			"obour_ticketing.api.send_slack_notification",
-                      ],
+                        "obour_ticketing.api.send_email_issue_status",
+                        "obour_ticketing.api.send_notification",
+                        "obour_ticketing.api.send_slack_notification",
+                    ],
 	},
     "User": {
         "after_insert": "obour_ticketing.api.add_ticket_role",
@@ -170,10 +170,10 @@ scheduler_events = {
 	"daily": [
 		"obour_ticketing.tasks.auto_close_tickets"
 	],
-
     "cron": {
-        "*/15 * * * *": [
-			"obour_ticketing.tasks.send_slack_notification"
+        "0/15 * * * *": [
+			"obour_ticketing.tasks.send_slack_notification",
+            "obour_ticketing.tasks.set_response_resolution_status"
 		],
         "0 23 * * *": [
             "obour_ticketing.tasks.ticket_summary"
