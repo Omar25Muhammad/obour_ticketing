@@ -33,7 +33,11 @@ fixtures = [
                 [
 					"Issue-ticketing_group",
                     "Service Level Priority-notify_response_time",
-                    "Service Level Priority-notify_resolution_time"
+                    "Service Level Priority-notify_resolution_time",
+                    "Issue-status_sb",
+                    "Issue-response_status",
+                    "Issue-column_break_dgcxb",
+                    "Issue-resolution_status"
                 ]
             ]
         ]
