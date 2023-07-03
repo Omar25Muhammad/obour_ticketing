@@ -21,9 +21,18 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Support Settings",
+   "link_to": "Support Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2023-07-02 15:35:19.623518",
+ "modified": "2023-07-03 13:55:29.977920",
  "modified_by": "Administrator",
  "module": "Obour Ticketing",
  "name": "Ticketing",
