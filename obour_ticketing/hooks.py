@@ -199,9 +199,11 @@ scheduler_events = {
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "obour_ticketing.event.get_events"
-# }
+override_whitelisted_methods = {
+	"frappe.website.doctype.web_form.web_form.accept": "obour_ticketing.event.accept",
+    "frappe.templates.includes.comments.comments.add_comment": "obour_ticketing.event.add_comment"
+}
+
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
