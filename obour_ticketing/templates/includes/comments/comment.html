@@ -7,16 +7,14 @@
             <span class="font-weight-bold text-muted">
                 {{ comment.sender_full_name or comment.comment_by }}
             </span>
-            {% if comment.attachments %}
-            <div class="btn-group">
+            <div class="btn-group {{ hidden if not comment.attachments else ''}}">
                 <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     {{_("Preview Image")}}
                 </button>
                 <div class="dropdown-menu dropdown-menu-right" style="min-width: 600px;">
-                    <img src="{{ comment.attachments[0].file_url }}" alt="Comment Attachment">
+                    <img src="{{ comment.attachments[0].file_url if comment.attachments else '' }}" alt="Comment Attachment">
                 </div>
             </div>
-            {% endif %}
             <span class="text-muted small">
                 {{ comment.creation | global_date_format }}
             </span>

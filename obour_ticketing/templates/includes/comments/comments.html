@@ -132,6 +132,7 @@
 							frappe.msgprint(r._server_messages);
 					} else {
 						if (r.message) {
+							let filrURL = ''
 							if (imageData){
 								let doctype = r.message[1].doctype
 								let docname = r.message[1].name
@@ -142,9 +143,13 @@
 									headers: {'X-Frappe-CSRF-Token': frappe.csrf_token},
 									method: 'POST',
 									body: imageData
-								}).then(r => r.json()).then(d => console.log(d));
+								}).then(r => r.json()).then(d => filrURL = d.message?.file_url || '');
 							}
 							$(r.message[0]).appendTo("#comment-list");
+							if (filrURL){
+								$(".comment-row .btn-group").last().removeClass("hidden");
+								$(".comment-row .btn-group img").last().attr("src", filrURL);
+							}
 							$(".add-comment").text(__("Add Another Comment"));
 						}
 						$(".no-comment, .add-comment").toggle(false);
