@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 from erpnext.support.doctype.issue.issue import Issue
+from frappe.website.doctype.web_form.web_form import WebForm
 import frappe
 from frappe.model.document import Document
 from frappe import _
@@ -96,3 +97,80 @@ class CustomIssue(Issue):
         communication.flags.ignore_permissions = True
         communication.flags.ignore_mandatory = True
         communication.save()
+
+
+class CustomWebForm(WebForm):
+    def load_document(self, context):
+        """Load document `doc` and `layout` properties for template"""
+        if frappe.form_dict.name or frappe.form_dict.new:
+            context.layout = self.get_layout()
+            context.parents = [{"route": self.route, "label": _(self.title)}]
+
+        if frappe.form_dict.name:
+            context.doc = frappe.get_doc(self.doc_type, frappe.form_dict.name)
+            context.title = context.doc.get(context.doc.meta.get_title_field())
+            context.doc.add_seen()
+
+            context.reference_doctype = context.doc.doctype
+            context.reference_name = context.doc.name
+
+            if self.show_attachments:
+                context.attachments = frappe.get_all(
+                    "File",
+                    filters={
+                        "attached_to_name": context.reference_name,
+                        "attached_to_doctype": context.reference_doctype,
+                        "is_private": 0,
+                    },
+                    fields=["file_name", "file_url", "file_size"],
+                )
+
+            if self.allow_comments:
+                from frappe.website.utils import get_comment_list
+                if context.doc.doctype == "Issue":     
+                    comments = self.get_comments(context.doc.doctype, context.doc.name)
+                else:
+                    comments = get_comment_list(context.doc.doctype, context.doc.name)
+
+                context.comment_list = comments
+
+    def get_comments(self, doctype, name):
+        from frappe.desk.form.load import get_attachments
+        comments = frappe.get_all(
+            "Comment",
+            fields=["name", "creation", "owner", "comment_email", "comment_by", "content"],
+            filters=dict(
+                reference_doctype=doctype,
+                reference_name=name,
+                comment_type="Comment",
+            ),
+            or_filters=[["owner", "=", frappe.session.user], ["published", "=", 1]],
+        )
+
+        for row in comments:
+            row["attachments"] = get_attachments("Comment", row.name)
+
+        communications = frappe.get_all(
+            "Communication",
+            fields=[
+                "name",
+                "creation",
+                "owner",
+                "owner as comment_email",
+                "sender_full_name as comment_by",
+                "content",
+                "recipients",
+            ],
+            filters=dict(
+                reference_doctype=doctype,
+                reference_name=name,
+            ),
+            or_filters=[
+                ["recipients", "like", "%{0}%".format(frappe.session.user)],
+                ["cc", "like", "%{0}%".format(frappe.session.user)],
+                ["bcc", "like", "%{0}%".format(frappe.session.user)],
+            ],
+        )
+
+        return sorted((comments + communications), key=lambda comment: comment["creation"], reverse=True)
+
