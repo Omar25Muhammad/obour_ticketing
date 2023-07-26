@@ -165,6 +165,9 @@ doc_events = {
     "User": {
         "after_insert": "obour_ticketing.api.add_ticket_role",
 	},
+    "Web Form": {
+        "on_update": "obour_ticketing.api.set_file_max_size"
+    }
 }
 
 # Scheduled Tasks

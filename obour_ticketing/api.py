@@ -244,3 +244,9 @@ def create_notification_log(recipients, msg, doc, doc_link):
         notify_log.type = "Alert"
         notify_log.email_content = f"""<a href="{doc_link}" style="cursor: pointer">{doc.name}</a>"""
         notify_log.insert(ignore_permissions=True)
+
+def set_file_max_size(doc, method):
+    from frappe.installer import update_site_config
+    max_size = cint(doc.max_attachment_size) * 1024 * 1024
+    if max_size > 0 and doc.has_value_changed("max_attachment_size"):
+        update_site_config("max_file_size", max_size)
