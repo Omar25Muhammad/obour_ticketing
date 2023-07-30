@@ -41,10 +41,11 @@ def reassign_users(docname):
                 recipients.append(supervisor.supervisor_email)
 
         if len(recipients):
+            subject, message = get_email_template("Issue Un Assigned", issue)
             frappe.sendmail(
                 recipients=recipients,
-                subject="Issue Un Assigned !",
-                message="Issue: {} Has no Technicians Assignment!".format(frappe.bold(issue.name)),
+                subject=subject,
+                message=message,
                 delayed=False
             )
     if len(ticketing_group.supervisor_data):
@@ -107,10 +108,11 @@ def check_priority_and_type(doc, method):
 def send_email_issue_initiator(doc, method):
     """send email for issue initiator 'customer' after create issue"""
     if cint(doc.via_customer_portal):
+        subject, message = get_email_template("New Ticket", doc)
         sendmail(
             recipients=[frappe.session.user],
-            subject="Your Ticket has Opened in system",
-            message="Test Message",
+            subject=subject,
+            message=message,
             delayed=False
         )
 
@@ -118,10 +120,11 @@ def send_email_ticket_group(doc, method):
     """send email for all users in the ticket group"""
     recipients = get_recipients(doc)
     if len(recipients) > 0:
+        subject, message = get_email_template("New Ticket", doc)
         sendmail(
             recipients=recipients,
-            subject="New Ticket was Opened {0} for {1} Ticket Group".format(doc.name, doc.ticketing_group),
-            message="Test Message"
+            subject=subject,
+            message=message
         )
 
 def send_email_issue_status(doc, method):
@@ -139,18 +142,15 @@ def send_email_issue_status(doc, method):
 
     # case: user decline the ticket 
     if prev_status in ("Closed", "Resolved") and current_status == "In Progress":
-        subject = "Ticket Declined"
-        message = "Ticket {0} is Declined".format(doc.name)
+        subject, message = get_email_template("Ticket Declined", doc)
 
     elif current_status != prev_status and prev_status != "Closed":
 
         if current_status == "Resolved":
-            subject = "Ticket Resolved"
-            message = "Ticket {0} is Resolved".format(doc.name)
+            subject, message = get_email_template("Ticket Resolved", doc)
 
         elif current_status == "Closed":
-            subject = "Ticket Closed"
-            message = "Ticket {0} is Closed".format(doc.name)
+            subject, message = get_email_template("Ticket Closed", doc)
 
 
     if subject and message and len(recipients) > 0:
@@ -250,3 +250,19 @@ def set_file_max_size(doc, method):
     max_size = cint(doc.max_attachment_size) * 1024 * 1024
     if max_size > 0 and doc.has_value_changed("max_attachment_size"):
         update_site_config("max_file_size", max_size)
+
+def get_email_template(name, doc):
+    """get email template content based on email template name"""
+    print(name)
+    if not name or not doc: return
+    email_template = frappe.db.exists("Email Template", name)
+    if not email_template: return name, f"Subject: {doc.subject} \n <br> Please create email temlate with name: '{name}' to set the message"
+
+    email_template = frappe.get_doc("Email Template", email_template)
+    args = dict(doc.as_dict())
+    email_message = email_template.response_html if email_template.use_html else email_template.response
+    message = frappe.render_template(email_message, args)
+    print(email_template.subject, 'sub')
+    print(message)
+
+    return email_template.subject, message
