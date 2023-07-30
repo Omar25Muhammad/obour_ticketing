@@ -253,16 +253,16 @@ def set_file_max_size(doc, method):
 
 def get_email_template(name, doc):
     """get email template content based on email template name"""
-    print(name)
-    if not name or not doc: return
+    if not name or not doc:
+        return "Template not found", " "
+
     email_template = frappe.db.exists("Email Template", name)
-    if not email_template: return name, f"Subject: {doc.subject} \n <br> Please create email temlate with name: '{name}' to set the message"
+    if not email_template:
+        return name, f"Subject: {doc.subject} \n <br> Please create email temlate with name: '{name}' to set the message"
 
     email_template = frappe.get_doc("Email Template", email_template)
     args = dict(doc.as_dict())
     email_message = email_template.response_html if email_template.use_html else email_template.response
     message = frappe.render_template(email_message, args)
-    print(email_template.subject, 'sub')
-    print(message)
 
     return email_template.subject, message
