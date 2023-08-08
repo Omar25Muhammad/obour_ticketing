@@ -83,5 +83,22 @@
   "property_type": "Text",
   "row_name": null,
   "value": "Critical\nHigh\nMedium\nLow"
+ },
+ {
+  "default_value": null,
+  "doc_type": "Issue",
+  "docstatus": 0,
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocType",
+  "field_name": null,
+  "modified": "2023-08-08 14:44:56.207085",
+  "name": "Issue-main-autoname",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "property": "autoname",
+  "property_type": "Data",
+  "row_name": null,
+  "value": "format:ISS-{YYYY}-{#####}"
  }
 ]
