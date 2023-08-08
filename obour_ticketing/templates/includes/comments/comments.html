@@ -40,7 +40,7 @@
 					</div>
 					<div class="row" style="margin-bottom: 15px;">
 						<div class="col-sm-6">
-							<input id="comment_file" class="form-control comment_file" name="comment_file" type="file" accept="image/*">
+							<input id="comment_file" class="form-control comment_file" name="comment_file" type="file" accept="image/*, .pdf, .xlsx, .csv" multiple>
 						</div>
 					</div>
 					<p>
@@ -115,41 +115,22 @@
 				frappe.msgprint("{{ _('Please add a valid comment.') }}");
 				return false;
 			}
-			let imageFile = $("[name='comment_file']")[0].files[0];
-			let imageData = new FormData();
-			if (imageFile) {
-				imageData.append("file", imageFile);
-			}
 
 			frappe.call({
 				btn: this,
 				type: "POST",
 				method: "frappe.templates.includes.comments.comments.add_comment",
 				args: args,
-				callback: async function(r) {
+				callback: function(r) {
 					if(r.exc) {
 						if(r._server_messages)
 							frappe.msgprint(r._server_messages);
 					} else {
 						if (r.message) {
-							let filrURL = ''
-							if (imageData){
-								let doctype = r.message[1].doctype
-								let docname = r.message[1].name
-								imageData.append("doctype", doctype);
-								imageData.append("docname", docname);
+							// handle uploaded comment files
+							uploadFiels(r.message[1])
 
-								const img = await fetch('/api/method/upload_file', {
-									headers: {'X-Frappe-CSRF-Token': frappe.csrf_token},
-									method: 'POST',
-									body: imageData
-								}).then(r => r.json()).then(d => filrURL = d.message?.file_url || '');
-							}
 							$(r.message[0]).appendTo("#comment-list");
-							if (filrURL){
-								$(".comment-row .btn-group").last().removeClass("hidden");
-								$(".comment-row .btn-group img").last().attr("src", filrURL);
-							}
 							$(".add-comment").text(__("Add Another Comment"));
 						}
 						$(".no-comment, .add-comment").toggle(false);
@@ -161,5 +142,30 @@
 
 			return false;
 		})
+		const uploadFiels = async (d)=> {
+			let doctype = d.doctype
+			let docname = d.name
+			let attachFiles = $("[name='comment_file']")[0].files;
+
+			for (let i = 0; i < attachFiles.length; i++) {
+				let formAttachFiles = new FormData();
+				formAttachFiles.append('file', attachFiles[i])
+				formAttachFiles.append('doctype', doctype)
+				formAttachFiles.append('docname', docname)
+				await fetch('/api/method/upload_file', {
+					headers: {'X-Frappe-CSRF-Token': frappe.csrf_token},
+					method: 'POST',
+					body: formAttachFiles
+				}).then(r => r.json())
+				.then(d => {
+					$(`div[data-comment='${d.message.attached_to_name}'] .attachments`).append(`
+						<a href="${d.message.file_url}" target="_blank">
+                            File 
+                        </a>
+						<span class="mx-2">|</span>
+					`)
+				});
+			}
+		}
 	});
 </script>
