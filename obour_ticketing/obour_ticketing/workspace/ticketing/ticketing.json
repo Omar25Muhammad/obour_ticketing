@@ -32,7 +32,7 @@
    "type": "Link"
   }
  ],
- "modified": "2023-07-03 13:55:29.977920",
+ "modified": "2023-08-08 13:57:52.648888",
  "modified_by": "Administrator",
  "module": "Obour Ticketing",
  "name": "Ticketing",
@@ -68,6 +68,12 @@
    "doc_view": "",
    "label": "Service Level Agreement",
    "link_to": "Service Level Agreement",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "",
+   "label": "Issue Settings",
+   "link_to": "Issue Settings",
    "type": "DocType"
   }
  ]

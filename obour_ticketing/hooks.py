@@ -207,7 +207,8 @@ scheduler_events = {
 #
 override_whitelisted_methods = {
 	"frappe.website.doctype.web_form.web_form.accept": "obour_ticketing.event.accept",
-    "frappe.templates.includes.comments.comments.add_comment": "obour_ticketing.event.add_comment"
+    "frappe.templates.includes.comments.comments.add_comment": "obour_ticketing.event.add_comment",
+    "frappe.core.doctype.user.user.sign_up": "obour_ticketing.override.sign_up"
 }
 
 #
