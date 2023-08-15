@@ -121,8 +121,23 @@ class CustomWebForm(WebForm):
             or_filters=[["owner", "=", frappe.session.user], ["published", "=", 1]],
         )
 
+        from bs4 import BeautifulSoup
+
         for row in comments:
             row["attachments"] = get_attachments("Comment", row.name)
+
+            soup = BeautifulSoup(row.content, 'html.parser')
+            p_tags = soup.find_all('p')
+            img_tags = soup.find_all('img')
+
+            for img_tag in img_tags:
+                src_value = img_tag.get('src', '')
+                if not src_value: continue
+                row.attachments.append({"file_url": src_value})
+
+            row["content"] = ""
+            for p in p_tags:
+                row["content"] += p.get_text()
 
         communications = frappe.get_all(
             "Communication",

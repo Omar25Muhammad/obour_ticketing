@@ -1,3 +1,18 @@
+
+<style>
+	#comment_img {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-top: 15px;
+	}
+	#comment_img img{
+		max-width: 200px;
+		width: 200px;
+		object-fit: cover;
+	}
+</style>
+
 <div class="comment-view mb-6">
 	{% if comment_text %}
 	<div class="comment-header mb-6">{{ comment_text }}</div>
@@ -41,6 +56,9 @@
 					<div class="row" style="margin-bottom: 15px;">
 						<div class="col-sm-6">
 							<input id="comment_file" class="form-control comment_file" name="comment_file" type="file" accept="image/*, .pdf, .xlsx, .csv" multiple>
+						</div>
+						<div class="col-sm-3">
+							<button class="btn btn-primary" id="upload_files">{{_("Upload File/s")}}</button>
 						</div>
 					</div>
 					<p>
@@ -90,7 +108,49 @@
 			$("#comment-form textarea").val("");
 		})
 
+		let file_urls = []
+		let isUploaded = false
+
+		$("#upload_files").on("click", e => {
+			e.preventDefault();
+			let doctype = "Issue"
+			let docname = "{{ reference_name or name }}"
+			let attachFiles = $("[name='comment_file']")[0].files;
+
+			if(attachFiles.length == 0){
+				frappe.msgprint(__("Please Select File to Upload !"))
+				return false
+			}
+
+			try{
+				for (let i = 0; i < attachFiles.length; i++) {
+					let formAttachFiles = new FormData();
+					formAttachFiles.append('file', attachFiles[i])
+					formAttachFiles.append('doctype', doctype)
+					formAttachFiles.append('docname', docname)
+					fetch('/api/method/upload_file', {
+						headers: {'X-Frappe-CSRF-Token': frappe.csrf_token},
+						method: 'POST',
+						body: formAttachFiles
+					}).then(r => r.json())
+					.then(d => {
+						file_urls.push(d.message.file_url)
+						console.log("Uploaded Successfully !")
+					})
+				}
+				frappe.msgprint(__(`<b>${attachFiles.length}</b> Files Uploaded Successfully !`))
+				isUploaded = true
+			}
+			catch(err){
+				console.log(err)
+			}
+		})
 		$("#submit-comment").click(function() {
+			let attachFiles = $("[name='comment_file']")[0].files;
+			if (!isUploaded && attachFiles.length){
+				frappe.msgprint(__(`Please Upload File Before Submit your Comment`))
+				return false
+			}
 			var args = {
 				comment_by: $("[name='comment_by']").val(),
 				comment_email: $("[name='comment_email']").val(),
@@ -116,6 +176,11 @@
 				return false;
 			}
 
+			if (file_urls.length > 0){
+				let comment	 = `</br> <div id="comment_img"> ${file_urls.map(el => (`<img src='${el}' /> `)).join("")} </div>`
+				args.comment += comment
+			}
+
 			frappe.call({
 				btn: this,
 				type: "POST",
@@ -127,9 +192,6 @@
 							frappe.msgprint(r._server_messages);
 					} else {
 						if (r.message) {
-							// handle uploaded comment files
-							uploadFiels(r.message[1])
-
 							$(r.message[0]).appendTo("#comment-list");
 							$(".add-comment").text(__("Add Another Comment"));
 						}
@@ -142,30 +204,5 @@
 
 			return false;
 		})
-		const uploadFiels = async (d)=> {
-			let doctype = d.doctype
-			let docname = d.name
-			let attachFiles = $("[name='comment_file']")[0].files;
-
-			for (let i = 0; i < attachFiles.length; i++) {
-				let formAttachFiles = new FormData();
-				formAttachFiles.append('file', attachFiles[i])
-				formAttachFiles.append('doctype', doctype)
-				formAttachFiles.append('docname', docname)
-				await fetch('/api/method/upload_file', {
-					headers: {'X-Frappe-CSRF-Token': frappe.csrf_token},
-					method: 'POST',
-					body: formAttachFiles
-				}).then(r => r.json())
-				.then(d => {
-					$(`div[data-comment='${d.message.attached_to_name}'] .attachments`).append(`
-						<a href="${d.message.file_url}" target="_blank">
-                            File 
-                        </a>
-						<span class="mx-2">|</span>
-					`)
-				});
-			}
-		}
 	});
 </script>

@@ -10,12 +10,14 @@
             <div class="flex align-items-center attachments">
                 {% if (comment.attachments or [])|length %}
                     {% for row in  comment.attachments %}
-                        <a href="{{ row.file_url }}" target="_blank">
-                            File {{ comment.attachments.index(row) + 1 }}
-                        </a>
-                        {% if comment.attachments.index(row) != comment.attachments|length -1 %}
-                            <span class="mx-2">|</span>
-                        {% endif %} 
+                        {% if row.file_url %}
+                            <a href="{{ row.file_url }}" target="_blank">
+                                File {{ comment.attachments.index(row) + 1 }}
+                            </a>
+                            {% if comment.attachments.index(row) != comment.attachments|length -1 %}
+                                <span class="mx-2">|</span>
+                            {% endif %} 
+                        {% endif %}
                     {% endfor %}
                 {% endif %}
             </div>
