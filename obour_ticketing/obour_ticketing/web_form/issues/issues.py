@@ -29,3 +29,24 @@ def reopen(issue, comment):
 		frappe.db.commit()
 		return True
 	return False
+
+@frappe.whitelist()
+def arhive_ticket(issue):
+	"""move issue to archived issue doctype when user cancle it"""
+	if not frappe.db.exists("Issue", issue): return
+
+	issue = frappe.get_doc("Issue", issue)
+	archive_issue = frappe.new_doc("Archived Issue")
+	archive_issue.issue_id = issue.name
+	archive_issue.subject = issue.subject
+	archive_issue.issue_type = issue.issue_type
+	archive_issue.priority = issue.priority
+	archive_issue.ticketing_group = issue.ticketing_group
+	archive_issue.status = issue.status
+	archive_issue.customer = issue.customer
+	archive_issue.via_portal = issue.via_customer_portal
+	archive_issue.insert(ignore_permissions=True)
+
+	issue.delete(ignore_permissions=True)
+	frappe.db.commit()
+	return True

@@ -32,7 +32,7 @@
    "type": "Link"
   }
  ],
- "modified": "2023-08-08 13:57:52.648888",
+ "modified": "2023-08-15 15:27:51.630012",
  "modified_by": "Administrator",
  "module": "Obour Ticketing",
  "name": "Ticketing",
@@ -74,6 +74,12 @@
    "doc_view": "",
    "label": "Issue Settings",
    "link_to": "Issue Settings",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "",
+   "label": "Archived Issue",
+   "link_to": "Archived Issue",
    "type": "DocType"
   }
  ]
