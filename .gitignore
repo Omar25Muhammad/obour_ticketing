@@ -1,0 +1,9 @@
+.DS_Store
+*.pyc
+*.egg-info
+*.swp
+tags
+obour_ticketing/docs/current
+*.min.js
+*.min.js.map
+*.min.css

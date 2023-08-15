@@ -15,7 +15,9 @@
   "section_break_2",
   "supervisor_data",
   "section_break_4",
-  "administrator_data"
+  "administrator_data",
+  "slack_notification_section",
+  "slack_url"
  ],
  "fields": [
   {
@@ -69,11 +71,22 @@
    "fieldtype": "Table",
    "label": "Technicians",
    "options": "Ticketing User Table"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "slack_notification_section",
+   "fieldtype": "Section Break",
+   "label": "Slack Notification"
+  },
+  {
+   "fieldname": "slack_url",
+   "fieldtype": "Small Text",
+   "label": "Slack URL"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-06-04 11:20:59.683681",
+ "modified": "2023-06-24 10:28:27.644505",
  "modified_by": "Administrator",
  "module": "Obour Ticketing",
  "name": "Ticketing Groups",

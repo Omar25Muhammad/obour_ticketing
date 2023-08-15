@@ -1,0 +1,32 @@
+[
+ {
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Issue Type",
+  "modified": "2023-07-01 10:00:47.112885",
+  "name": "Incident",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ },
+ {
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Issue Type",
+  "modified": "2023-07-01 10:00:55.791744",
+  "name": "Problem",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ },
+ {
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Issue Type",
+  "modified": "2023-07-01 10:01:05.780566",
+  "name": "Service",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ }
+]
