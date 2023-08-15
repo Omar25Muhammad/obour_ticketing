@@ -19,6 +19,7 @@ class CustomIssue(Issue):
             self.db_set("agreement_status", "Fulfilled")
         # else:
         #     self.db_set("agreement_status", "Ongoing")
+        self.add_status_reason()
         super().validate()
 
     def update_agreement_status(self):
@@ -72,6 +73,12 @@ class CustomIssue(Issue):
         communication.flags.ignore_mandatory = True
         communication.save()
 
+    def add_status_reason(self):
+        prev_table = cint(frappe.db.count("Track Issue Status", {"parent": self.name})) #len(frappe.db.get_doc("Issue", self.name).issue_status_reasons)
+        if self.has_value_changed("status"):
+            if prev_table == len(self.issue_status_reasons):
+                frappe.throw(_("Please Add Reason in Track Issue Status table"))
+                return False
 
 class CustomWebForm(WebForm):
     def load_document(self, context):
