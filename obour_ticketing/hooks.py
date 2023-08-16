@@ -39,7 +39,9 @@ fixtures = [
                     "Issue-column_break_dgcxb",
                     "Issue-resolution_status",
                     "Issue-attachment_sb",
-                    "Issue-attachments"
+                    "Issue-attachments",
+                    "Issue-issue_status_reasons",
+                    "Issue-track_issue_status"
                 ]
             ]
         ]
