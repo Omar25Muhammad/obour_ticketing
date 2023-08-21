@@ -75,7 +75,7 @@ class CustomIssue(Issue):
 
     def add_status_reason(self):
         prev_table = cint(frappe.db.count("Track Issue Status", {"parent": self.name})) #len(frappe.db.get_doc("Issue", self.name).issue_status_reasons)
-        if self.has_value_changed("status"):
+        if self.has_value_changed("status") and not self.is_new():
             if prev_table == len(self.issue_status_reasons):
                 frappe.throw(_("Please Add Reason in Track Issue Status table"))
                 return False
