@@ -6,6 +6,9 @@ from frappe.website.doctype.web_form.web_form import WebForm
 import frappe
 from frappe import _
 from frappe.utils import cint, escape_html
+from bs4 import BeautifulSoup
+from frappe.desk.form.load import get_attachments
+
 
 class CustomIssue(Issue):
     """
@@ -116,7 +119,6 @@ class CustomWebForm(WebForm):
                 context.comment_list = comments
 
     def get_comments(self, doctype, name):
-        from frappe.desk.form.load import get_attachments
         comments = frappe.get_all(
             "Comment",
             fields=["name", "creation", "owner", "comment_email", "comment_by", "content"],
@@ -124,27 +126,11 @@ class CustomWebForm(WebForm):
                 reference_doctype=doctype,
                 reference_name=name,
                 comment_type="Comment",
-            ),
-            or_filters=[["owner", "=", frappe.session.user], ["published", "=", 1]],
+            )
         )
 
-        from bs4 import BeautifulSoup
-
         for row in comments:
-            row["attachments"] = get_attachments("Comment", row.name)
-
-            soup = BeautifulSoup(row.content, 'html.parser')
-            p_tags = soup.find_all('p')
-            img_tags = soup.find_all('img')
-
-            for img_tag in img_tags:
-                src_value = img_tag.get('src', '')
-                if not src_value: continue
-                row.attachments.append({"file_url": src_value})
-
-            row["content"] = ""
-            for p in p_tags:
-                row["content"] += p.get_text()
+            extract_imgs_and_p(row)
 
         communications = frappe.get_all(
             "Communication",
@@ -232,3 +218,18 @@ def sign_up(email, full_name, redirect_to):
         else:
             return 2, _("Please ask your administrator to verify your sign-up")
 
+def extract_imgs_and_p(row):
+    row["attachments"] = get_attachments("Comment", row.name)
+    soup = BeautifulSoup(row.content, 'html.parser')
+    p_tags = soup.find_all('p')
+    img_tags = soup.find_all('img')
+
+    for img_tag in img_tags:
+        src_value = img_tag.get('src', '')
+        if not src_value: continue
+        row.attachments.append({"file_url": src_value})
+
+    row["content"] = ""
+    for p in p_tags:
+        row["content"] += p.get_text()
+        return row.content, row.attachments

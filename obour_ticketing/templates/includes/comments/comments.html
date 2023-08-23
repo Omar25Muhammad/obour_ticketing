@@ -175,10 +175,10 @@
 				frappe.msgprint("{{ _('Please add a valid comment.') }}");
 				return false;
 			}
-			
+			args.comment = `<p>${args.comment}</p>`
 			if (file_urls.length > 0){
 				let comment	 = `</br> <div id="comment_img"> ${file_urls.map(el => (`<img src='${el}' /> `)).join("")} </div>`
-				args.comment = `<p>${args.comment}</p> ${comment}`
+				args.comment += comment
 			}
 
 			frappe.call({
