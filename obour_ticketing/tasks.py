@@ -85,9 +85,9 @@ def send(slack_url, msg):
     response = requests.post(slack_url, data=json.dumps(payload), headers=headers)
     # Check the response status
     if response.status_code == 200:
-        frappe.msgprint(_("Message sent successfully to Slack!"), alert=True)
+        frappe.msgprint(_("Message sent successfully to Teams!"), alert=True)
     else:
-        frappe.msgprint(_("Failed to send message to Slack. Status code: {}".format(response.status_code)), alert=True)
+        frappe.msgprint(_("Failed to send message to Teams. Status code: {}".format(response.status_code)), alert=True)
 
 def ticket_summary():
     """send daily summary about ticket"""

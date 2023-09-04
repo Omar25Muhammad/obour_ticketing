@@ -16,18 +16,19 @@ class CustomIssue(Issue):
     This class inherits from the 'Document' class of the Frappe framework and extends the functionality of the 'Issue' class of the ERPNext application.
     It Adds the 'after_insert' method to senf an email notification to list of people defined in the Ticketing Group document when raising an issue.
     """
+
     def validate(self):
         prev_status = frappe.db.get_value("Issue", self.name, "status")
         if self.status == "Closed" and prev_status != "Closed":
             self.db_set("agreement_status", "Fulfilled")
         # else:
         #     self.db_set("agreement_status", "Ongoing")
-        self.add_status_reason()
+        # self.add_status_reason()
         super().validate()
 
     def update_agreement_status(self):
         # Added By Omar
-        group = frappe.get_doc('Ticketing Groups', self.ticketing_group)
+        group = frappe.get_doc("Ticketing Groups", self.ticketing_group)
         emails = []
 
         for admin in group.administrator_data:
@@ -38,23 +39,36 @@ class CustomIssue(Issue):
 
         if self.service_level_agreement and self.agreement_status == "Ongoing":
             if (
-                cint(frappe.db.get_value("Issue", self.name, "response_by_variance")) < 0
-                or cint(frappe.db.get_value("Issue", self.name, "resolution_by_variance")) < 0
+                cint(frappe.db.get_value("Issue", self.name, "response_by_variance"))
+                < 0
+                or cint(
+                    frappe.db.get_value("Issue", self.name, "resolution_by_variance")
+                )
+                < 0
             ):
                 self.agreement_status = "Failed"
                 # Added by Eng. Omar
                 if len(emails) > 0:
-                    frappe.sendmail(recipients=emails, subject='Failed Issue!', message=f'Issue with ID: {self.name} raised by {self.raised_by} has failed!', delayed=False)
+                    frappe.sendmail(
+                        recipients=emails,
+                        subject="Failed Issue!",
+                        message=f"Issue with ID: {self.name} raised by {self.raised_by} has failed!",
+                        delayed=False,
+                    )
 
             # End Added by Eng. Omar
         else:
             self.agreement_status = "Fulfilled"
             # Added by Eng. Omar
             if len(emails) > 0:
-                frappe.sendmail(recipients=emails, subject='Fulfilled Issue!', message=f'Issue with ID: {self.name} raised by {self.raised_by} has Fulfilled!', delayed=False)
+                frappe.sendmail(
+                    recipients=emails,
+                    subject="Fulfilled Issue!",
+                    message=f"Issue with ID: {self.name} raised by {self.raised_by} has Fulfilled!",
+                    delayed=False,
+                )
 
             # End Added by Eng. Omar
-
 
     def create_communication(self):
         communication = frappe.new_doc("Communication")
@@ -77,11 +91,14 @@ class CustomIssue(Issue):
         communication.save()
 
     def add_status_reason(self):
-        prev_table = cint(frappe.db.count("Track Issue Status", {"parent": self.name})) #len(frappe.db.get_doc("Issue", self.name).issue_status_reasons)
+        prev_table = cint(
+            frappe.db.count("Track Issue Status", {"parent": self.name})
+        )  # len(frappe.db.get_doc("Issue", self.name).issue_status_reasons)
         if self.has_value_changed("status") and not self.is_new():
             if prev_table == len(self.issue_status_reasons):
                 frappe.throw(_("Please Add Reason in Track Issue Status table"))
                 return False
+
 
 class CustomWebForm(WebForm):
     def load_document(self, context):
@@ -111,7 +128,8 @@ class CustomWebForm(WebForm):
 
             if self.allow_comments:
                 from frappe.website.utils import get_comment_list
-                if context.doc.doctype == "Issue":     
+
+                if context.doc.doctype == "Issue":
                     comments = self.get_comments(context.doc.doctype, context.doc.name)
                 else:
                     comments = get_comment_list(context.doc.doctype, context.doc.name)
@@ -121,12 +139,19 @@ class CustomWebForm(WebForm):
     def get_comments(self, doctype, name):
         comments = frappe.get_all(
             "Comment",
-            fields=["name", "creation", "owner", "comment_email", "comment_by", "content"],
+            fields=[
+                "name",
+                "creation",
+                "owner",
+                "comment_email",
+                "comment_by",
+                "content",
+            ],
             filters=dict(
                 reference_doctype=doctype,
                 reference_name=name,
                 comment_type="Comment",
-            )
+            ),
         )
 
         for row in comments:
@@ -154,7 +179,11 @@ class CustomWebForm(WebForm):
             ],
         )
 
-        return sorted((comments + communications), key=lambda comment: comment["creation"], reverse=True)
+        return sorted(
+            (comments + communications),
+            key=lambda comment: comment["creation"],
+            reverse=True,
+        )
 
 
 @frappe.whitelist(allow_guest=True)
@@ -218,15 +247,17 @@ def sign_up(email, full_name, redirect_to):
         else:
             return 2, _("Please ask your administrator to verify your sign-up")
 
+
 def extract_imgs_and_p(row):
     row["attachments"] = get_attachments("Comment", row.name)
-    soup = BeautifulSoup(row.content, 'html.parser')
-    p_tags = soup.find_all('p')
-    img_tags = soup.find_all('img')
+    soup = BeautifulSoup(row.content, "html.parser")
+    p_tags = soup.find_all("p")
+    img_tags = soup.find_all("img")
 
     for img_tag in img_tags:
-        src_value = img_tag.get('src', '')
-        if not src_value: continue
+        src_value = img_tag.get("src", "")
+        if not src_value:
+            continue
         row.attachments.append({"file_url": src_value})
 
     row["content"] = ""

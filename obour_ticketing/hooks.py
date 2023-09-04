@@ -13,17 +13,12 @@ app_license = "Copyright"
 # ------------------
 
 update_website_context = [
-	"obour_ticketing.api.update_website_context",
+    "obour_ticketing.api.update_website_context",
 ]
 
 fixtures = [
     "Issue Type",
-    {
-        "dt": "Role",
-        "filters": [
-            ["name", "in", ["Ticket Initiator"]]
-		]
-	},
+    {"dt": "Role", "filters": [["name", "in", ["Ticket Initiator"]]]},
     {
         "dt": "Custom Field",
         "filters": [
@@ -31,7 +26,7 @@ fixtures = [
                 "name",
                 "in",
                 [
-					"Issue-ticketing_group",
+                    "Issue-ticketing_group",
                     "Service Level Priority-notify_response_time",
                     "Service Level Priority-notify_resolution_time",
                     "Issue-status_sb",
@@ -41,11 +36,11 @@ fixtures = [
                     "Issue-attachment_sb",
                     "Issue-attachments",
                     "Issue-issue_status_reasons",
-                    "Issue-track_issue_status"
-                ]
+                    "Issue-track_issue_status",
+                ],
             ]
-        ]
-  	},
+        ],
+    },
     {
         "dt": "Property Setter",
         "filters": [
@@ -53,16 +48,33 @@ fixtures = [
                 "name",
                 "in",
                 [
-					"Issue-main-quick_entry",
-					"Issue-status-options",
-					"Portal Settings-hide_standard_menu-default",
-					"Support Settings-close_issue_after_days-default",
-					"ToDo-priority-options",
-                    "Issue-main-autoname"
-                ]
+                    "Issue-main-quick_entry",
+                    "Issue-status-options",
+                    "Portal Settings-hide_standard_menu-default",
+                    "Support Settings-close_issue_after_days-default",
+                    "ToDo-priority-options",
+                    "Issue-main-autoname",
+                ],
             ]
-        ]
-  	}
+        ],
+    },
+    {
+        "dt": "Email Template",
+        "filters": [
+            [
+                "name",
+                "in",
+                [
+                    "Ticket Closed",
+                    "Ticket Resolved",
+                    "Issue Un Assigned",
+                    "Ticket Declined",
+                    "New Ticket",
+                    "New Ticket Init",
+                ],
+            ]
+        ],
+    },
 ]
 
 
@@ -85,9 +97,7 @@ app_include_js = "/assets/obour_ticketing/js/assign_to.js"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-doctype_js = {
-    "Issue" : "public/js/issue.js"
-}
+doctype_js = {"Issue": "public/js/issue.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -100,7 +110,7 @@ doctype_js = {
 
 # website user home page (by Role)
 # role_home_page = {
-#	"Role": "home_page"
+# 	"Role": "home_page"
 # }
 
 # Generators
@@ -134,7 +144,7 @@ after_install = "obour_ticketing.install.after_install"
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
-	"Issue": "obour_ticketing.event.get_permission_query_conditions",
+    "Issue": "obour_ticketing.event.get_permission_query_conditions",
 }
 #
 
@@ -143,9 +153,9 @@ permission_query_conditions = {
 # Override standard doctype classes
 
 override_doctype_class = {
-	# "ToDo": "custom_app.overrides.CustomToDo",
-	"Issue": "obour_ticketing.override.CustomIssue",
-    "Web Form": "obour_ticketing.override.CustomWebForm"
+    # "ToDo": "custom_app.overrides.CustomToDo",
+    "Issue": "obour_ticketing.override.CustomIssue",
+    "Web Form": "obour_ticketing.override.CustomWebForm",
 }
 
 # Document Events
@@ -156,48 +166,42 @@ doc_events = {
     "Issue": {
         "before_insert": "obour_ticketing.api.check_priority_and_type",
         "after_insert": [
-                    	"obour_ticketing.api.send_email_issue_initiator",
-                        "obour_ticketing.api.send_email_ticket_group"
-                        ],
+            "obour_ticketing.api.send_email_issue_initiator",
+            "obour_ticketing.api.send_email_ticket_group",
+        ],
         "on_update": [
-                        "obour_ticketing.api.send_email_issue_status",
-                        "obour_ticketing.api.send_notification",
-                        "obour_ticketing.api.send_slack_notification",
-                    ],
-	},
+            "obour_ticketing.api.send_email_issue_status",
+            "obour_ticketing.api.send_notification",
+            # "obour_ticketing.api.send_slack_notification",
+        ],
+    },
     "User": {
         "after_insert": "obour_ticketing.api.add_ticket_role",
-	},
-    "Web Form": {
-        "on_update": "obour_ticketing.api.set_file_max_size"
-    }
+    },
+    "Web Form": {"on_update": "obour_ticketing.api.set_file_max_size"},
 }
 
 # Scheduled Tasks
 # ---------------
 
 scheduler_events = {
-# 	"all": [
-# 		"obour_ticketing.tasks.all"
-# 	],
-	"daily": [
-		"obour_ticketing.tasks.auto_close_tickets"
-	],
+    # 	"all": [
+    # 		"obour_ticketing.tasks.all"
+    # 	],
+    "daily": ["obour_ticketing.tasks.auto_close_tickets"],
     "cron": {
         "0/15 * * * *": [
-			"obour_ticketing.tasks.send_slack_notification",
-            "obour_ticketing.tasks.set_response_resolution_status"
-		],
-        "0 23 * * *": [
-            "obour_ticketing.tasks.ticket_summary"
-		]
-	}
-# 	"weekly": [
-# 		"obour_ticketing.tasks.weekly"
-# 	]
-# 	"monthly": [
-# 		"obour_ticketing.tasks.monthly"
-# 	]
+            "obour_ticketing.tasks.send_slack_notification",
+            "obour_ticketing.tasks.set_response_resolution_status",
+        ],
+        "0 23 * * *": ["obour_ticketing.tasks.ticket_summary"],
+    }
+    # 	"weekly": [
+    # 		"obour_ticketing.tasks.weekly"
+    # 	]
+    # 	"monthly": [
+    # 		"obour_ticketing.tasks.monthly"
+    # 	]
 }
 
 # Testing
@@ -209,9 +213,9 @@ scheduler_events = {
 # ------------------------------
 #
 override_whitelisted_methods = {
-	"frappe.website.doctype.web_form.web_form.accept": "obour_ticketing.event.accept",
+    "frappe.website.doctype.web_form.web_form.accept": "obour_ticketing.event.accept",
     "frappe.templates.includes.comments.comments.add_comment": "obour_ticketing.event.add_comment",
-    "frappe.core.doctype.user.user.sign_up": "obour_ticketing.override.sign_up"
+    "frappe.core.doctype.user.user.sign_up": "obour_ticketing.override.sign_up",
 }
 
 #
@@ -231,24 +235,22 @@ override_whitelisted_methods = {
 # --------------------
 
 user_data_fields = [
-	{
-		"doctype": "{doctype_1}",
-		"filter_by": "{filter_by}",
-		"redact_fields": ["{field_1}", "{field_2}"],
-		"partial": 1,
-	},
-	{
-		"doctype": "{doctype_2}",
-		"filter_by": "{filter_by}",
-		"partial": 1,
-	},
-	{
-		"doctype": "{doctype_3}",
-		"strict": False,
-	},
-	{
-		"doctype": "{doctype_4}"
-	}
+    {
+        "doctype": "{doctype_1}",
+        "filter_by": "{filter_by}",
+        "redact_fields": ["{field_1}", "{field_2}"],
+        "partial": 1,
+    },
+    {
+        "doctype": "{doctype_2}",
+        "filter_by": "{filter_by}",
+        "partial": 1,
+    },
+    {
+        "doctype": "{doctype_3}",
+        "strict": False,
+    },
+    {"doctype": "{doctype_4}"},
 ]
 
 # Authentication and authorization
