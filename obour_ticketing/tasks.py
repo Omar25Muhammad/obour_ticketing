@@ -1,18 +1,25 @@
-
 import frappe
 import requests
 import json
 from frappe import _
 from frappe.utils import add_to_date, now_datetime, today
 import re
+from frappe.desk.form.assign_to import remove
+
+# from obour_ticketing.api import create_notification_log
+
 
 def auto_close_tickets():
     """Auto-close Resolved support tickets after 3 days"""
     auto_close_after_days = (
-        frappe.db.get_value("Support Settings", "Support Settings", "close_issue_after_days") or 3
+        frappe.db.get_value(
+            "Support Settings", "Support Settings", "close_issue_after_days"
+        )
+        or 3
     )
 
-    issues = frappe.db.sql(""" 
+    issues = frappe.db.sql(
+        """ 
             SELECT name FROM tabIssue
             WHERE status='Resolved'
             AND modified<DATE_SUB(CURDATE(), INTERVAL %s DAY)
@@ -30,9 +37,11 @@ def auto_close_tickets():
 
     frappe.db.commit()
 
+
 @frappe.whitelist()
 def send_slack_notification():
-    resp_issues = frappe.db.sql("""
+    resp_issues = frappe.db.sql(
+        """
         SELECT iss.name, iss.ticketing_group, iss.priority, iss.service_level_agreement,
             slap.notify_resolution_time, slap.notify_response_time,
             iss.response_by_variance, iss.response_by, iss.resolution_by_variance, iss.resolution_by
@@ -41,34 +50,58 @@ def send_slack_notification():
             ON iss.service_level_agreement=slap.parent
             AND iss.priority=slap.priority
         WHERE iss.status='Open'
-        """, as_dict=True)
+        """,
+        as_dict=True,
+    )
 
     if len(resp_issues):
         for issue in resp_issues:
-            if not issue.service_level_agreement: continue
-            sla = frappe.get_doc("Service Level Agreement", issue.service_level_agreement)
+            if not issue.service_level_agreement:
+                continue
+            sla = frappe.get_doc(
+                "Service Level Agreement", issue.service_level_agreement
+            )
             issue_priority = {}
-            if not sla: continue
+            if not sla:
+                continue
             # set response and resolution status and send slack notification now .
             set_response_resolution_status(issue)
 
-            if len(sla.priorities) == 0: continue
+            if len(sla.priorities) == 0:
+                continue
             for row in sla.priorities:
                 # in values [0.25 => response time, 1 => resolution time]
-                issue_priority[row.priority] = [row.notify_response_time, row.notify_resolution_time]
-            if not issue_priority: continue
-            response_time = add_to_date(issue.response_by, hours=issue.notify_response_time)
-            resolution_time = add_to_date(issue.resolution_by, hours=issue.notify_resolution_time)
+                issue_priority[row.priority] = [
+                    row.notify_response_time,
+                    row.notify_resolution_time,
+                ]
+            if not issue_priority:
+                continue
+            response_time = add_to_date(
+                issue.response_by, hours=issue.notify_response_time
+            )
+            resolution_time = add_to_date(
+                issue.resolution_by, hours=issue.notify_resolution_time
+            )
 
             if response_time <= now_datetime():
-                supervisors = frappe.get_all("Ticketing Supervisor Table", filters={"parent": issue.ticketing_group}, pluck="slack_url")
+                supervisors = frappe.get_all(
+                    "Ticketing Supervisor Table",
+                    filters={"parent": issue.ticketing_group},
+                    pluck="slack_url",
+                )
                 if len(supervisors) > 0:
                     send_recipents(supervisors, issue, response_time, True)
 
             if resolution_time <= now_datetime():
-                admins = frappe.get_all("Ticketing Administrator Table", filters={"parent": issue.ticketing_group}, pluck="slack_url")
+                admins = frappe.get_all(
+                    "Ticketing Administrator Table",
+                    filters={"parent": issue.ticketing_group},
+                    pluck="slack_url",
+                )
                 if len(admins) > 0:
                     send_recipents(admins, issue, resolution_time, False)
+
 
 def send_recipents(recipents, issue, time, is_response):
     for slack_url in recipents:
@@ -79,6 +112,7 @@ def send_recipents(recipents, issue, time, is_response):
 
         send(slack_url, msg)
 
+
 def send(slack_url, msg):
     payload = {"text": msg}
     headers = {"Content-type": "application/json"}
@@ -87,11 +121,20 @@ def send(slack_url, msg):
     if response.status_code == 200:
         frappe.msgprint(_("Message sent successfully to Slack!"), alert=True)
     else:
-        frappe.msgprint(_("Failed to send message to Slack. Status code: {}".format(response.status_code)), alert=True)
+        frappe.msgprint(
+            _(
+                "Failed to send message to Slack. Status code: {}".format(
+                    response.status_code
+                )
+            ),
+            alert=True,
+        )
+
 
 def ticket_summary():
     """send daily summary about ticket"""
-    tickets = frappe.db.sql("""
+    tickets = frappe.db.sql(
+        """
     SELECT G.reporting_to, GROUP_CONCAT(G.total, ' ', G.status SEPARATOR ' and ') msg
     FROM
         (SELECT COUNT(iss.name) as total, iss.ticketing_group, iss.status, tg.reporting_to
@@ -100,17 +143,22 @@ def ticket_summary():
         WHERE DATE(iss.creation)='{}'
         GROUP BY iss.ticketing_group, iss.status) AS G
         GROUP BY G.reporting_to
-    """.format(today()), as_dict=True)
+    """.format(
+            today()
+        ),
+        as_dict=True,
+    )
 
     if any(tickets):
         for ticket in tickets:
-            msg = re.sub(r'(\d+)', r'( \1 )', ticket.msg)
+            msg = re.sub(r"(\d+)", r"( \1 )", ticket.msg)
             frappe.sendmail(
-                recipients = [ticket.reporting_to],
-                subject    = f"Daily Ticket Report",
-                message    = f"You Have a {msg} tickets today",
-                delayed=False
+                recipients=[ticket.reporting_to],
+                subject=f"Daily Ticket Report",
+                message=f"You Have a {msg} tickets today",
+                delayed=False,
             )
+
 
 def set_response_resolution_status(issue):
     """change response & resolution status based on sla timer and send slack notification"""
@@ -135,3 +183,53 @@ def set_response_resolution_status(issue):
         else:
             frappe.db.set_value("Issue", issue.name, "resolution_status", "Still")
             frappe.db.commit()
+
+
+def create_notification_log(recipients, msg, doc, doc_link):
+    for user in recipients:
+        if not frappe.db.exists("User", user):
+            continue
+        # if user.lower() == "administrator":
+        #     continue
+        notify_log = frappe.new_doc("Notification Log")
+        notify_log.subject = msg
+        notify_log.for_user = user
+        notify_log.type = "Alert"
+        notify_log.email_content = (
+            f"""<a href="{doc_link}" style="cursor: pointer">{doc.name}</a>"""
+        )
+        notify_log.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+
+def notify_times():
+    for iss in frappe.get_list("Issue", pluck="name"):
+        iss = frappe.get_doc("Issue", iss)
+        if iss.status == "Open" and iss.creation <= iss.response_by:
+            create_notification_log(["Administrator"], "Time's Up!", iss, iss.name)
+            frappe.sendmail(
+                recipients=["o.shehada@ard.ly"],
+                subject=f"Time's Up!",
+                message=f"Time's Up for Ticket {iss.name} for response time",
+                delayed=False,
+            )
+        if iss.status == "Open" and iss.creation <= iss.resolution_by:
+            frappe.sendmail(
+                recipients=["o.shehada@ard.ly"],
+                subject=f"Time's Up!",
+                message=f"Time's Up for Ticket {iss.name} for resolution time",
+                delayed=False,
+            )
+
+
+@frappe.whitelist()
+def get_assignees(docname):
+    assignees = frappe.get_doc("Issue", docname)._assign
+    if assignees:
+        assignees = json.loads(assignees)
+
+        for i in assignees:
+            remove("Issue", docname, i)
+            frappe.db.commit()
+
+        return assignees

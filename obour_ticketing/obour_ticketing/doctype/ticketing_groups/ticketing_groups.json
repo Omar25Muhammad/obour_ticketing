@@ -76,17 +76,17 @@
    "collapsible": 1,
    "fieldname": "slack_notification_section",
    "fieldtype": "Section Break",
-   "label": "Slack Notification"
+   "label": "Teams Notification"
   },
   {
    "fieldname": "slack_url",
    "fieldtype": "Small Text",
-   "label": "Slack URL"
+   "label": "Teams URL"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-06-24 10:28:27.644505",
+ "modified": "2023-10-02 02:56:28.506494",
  "modified_by": "Administrator",
  "module": "Obour Ticketing",
  "name": "Ticketing Groups",

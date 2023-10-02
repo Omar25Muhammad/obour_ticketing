@@ -16,7 +16,8 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "User Email",
-   "options": "User"
+   "options": "User",
+   "reqd": 1
   },
   {
    "fieldname": "column_break_2",
@@ -34,7 +35,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2023-05-30 13:34:23.466186",
+ "modified": "2023-10-02 02:36:58.821360",
  "modified_by": "Administrator",
  "module": "Obour Ticketing",
  "name": "Ticketing User Table",
