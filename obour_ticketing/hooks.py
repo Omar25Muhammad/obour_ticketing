@@ -67,6 +67,23 @@ fixtures = [
             ]
         ],
     },
+     {
+        "dt": "Email Template",
+        "filters": [
+            [
+                "name",
+                "in",
+                [
+                    "Ticket Closed",
+                    "Ticket Resolved",
+                    "Issue Un Assigned",
+                    "Ticket Declined",
+                    "New Ticket",
+                    "New Ticket Init",
+                ],
+            ]
+        ],
+    },
 ]
 
 
