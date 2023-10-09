@@ -1,5 +1,6 @@
 frappe.ui.form.on("Issue", {
   onload: function (frm) {
+    $(".form-links").hide();
     frm.remove_custom_button("Task", "Create");
     frm.remove_custom_button("Close");
     // $(".form-assignments").hide();
@@ -32,23 +33,82 @@ frappe.ui.form.on("Issue", {
         };
       });
 
-    if (Boolean(frappe.user.has_role("Ticket Supervisors")))
-      frm.set_query("assign_to", function () {
-        return {
-          query: "obour_ticketing.queries.filter_assign_to_supers",
-          filters: {
-            //   role: "Support Team",
-            ticketing_group: frm.doc.ticketing_group,
-          },
-        };
-      });
+    Boolean(frappe.user.has_role("Ticket Supervisors"));
+    frm.set_query("assign_to", function () {
+      return {
+        query: "obour_ticketing.queries.filter_assign_to_supers",
+        filters: {
+          //   role: "Support Team",
+          ticketing_group: frm.doc.ticketing_group,
+        },
+      };
+    });
   },
+  // refresh: async function (frm) {
   refresh: async function (frm) {
-    if (frm.doc.assign_to) {
-      if (frappe.session.user != frm.doc.assign_to) {
-        frm.events.set_readonly(frm);
-      }
-    }
+    $(".form-links").hide();
+    frappe.realtime.on("reload_page", (data) => {
+      frm.call({
+        method: "obour_ticketing.tasks.get_assignees",
+        args: { docname: frm.doc.name },
+        callback(r) {
+          frm.doc.assign_to = "";
+          frm.doc.status = "Open";
+          let reset_sla = new frappe.ui.Dialog({
+            title: __("Reset Service Level Agreement"),
+            fields: [
+              {
+                fieldtype: "Data",
+                fieldname: "reason",
+                label: __("Reason"),
+                reqd: 1,
+              },
+            ],
+            primary_action_label: __("Reset"),
+            primary_action: (values) => {
+              reset_sla.disable_primary_action();
+              reset_sla.hide();
+              reset_sla.clear();
+
+              frappe.show_alert({
+                indicator: "green",
+                message: __("Resetting Service Level Agreement."),
+              });
+
+              frm.call(
+                "reset_service_level_agreement",
+                {
+                  reason: values.reason,
+                  user: frappe.session.user_email,
+                },
+                () => {
+                  reset_sla.enable_primary_action();
+                  frm.refresh();
+                  frappe.msgprint(__("Service Level Agreement was reset."));
+                  frappe.set_route("List", "Issue");
+                }
+              );
+            },
+          });
+
+          reset_sla.show();
+          frm.refresh_fields();
+        },
+      });
+      console.log(data);
+    });
+
+    if (
+      frappe.user.has_role("Support Team") &&
+      !frm.is_new() &&
+      frappe.session.user != "Administrator"
+    )
+      frm.set_df_property("ticketing_group", "read_only", 1);
+    // if (frm.doc.assign_to) {
+    //   if (frappe.session.user != frm.doc.assign_to) {
+    //     frm.events.set_readonly(frm);
+    //   }
+    // }
     // remove create button
     frm.remove_custom_button("Task", "Create");
     frm.remove_custom_button("Close");
@@ -92,6 +152,22 @@ frappe.ui.form.on("Issue", {
           },
         };
       });
+
+    // --------------------------
+
+    // frm.add_custom_button("ok", () => {
+    //   frm.call({
+    //     method: "obour_ticketing.tasks.reload_page",
+    //     callback(res) {
+    //       console.log("ok");
+    //     },
+    //     error(err) {
+    //       console.log("Error");
+    //     },
+    //   });
+    // });
+
+    // --------------------------
 
     let assigned_users = await frm.events.get_assigned_users(frm);
     if (!frm.is_new()) {
@@ -157,17 +233,20 @@ frappe.ui.form.on("Issue", {
     frappe.db
       .get_value("Issue", frm.doc.name, "ticketing_group")
       .then(function (response) {
-        var ticketing_group = response.message.ticketing_group;
+        let ticketing_group = response.message.ticketing_group;
         if (ticketing_group != frm.doc.ticketing_group) {
-          frappe.set_route("List", "Issue");
+          frm.call({
+            method: "obour_ticketing.tasks.reload_page",
+            callback(res) {
+              console.log("ok");
+              // frappe.set_route("List", "Issue");
+            },
+          });
         }
       });
   },
   set_readonly(frm) {
     $.each(frm.fields_dict, function (fieldname, field) {
-      // Check the field type and do something
-      //   if (field.df.fieldtype === "Data") {
-      // For example, make Data type fields read-only
       frm.set_df_property(fieldname, "read_only", 1);
       frm.refresh_fields();
       frm.reload_doc();
@@ -180,41 +259,59 @@ frappe.ui.form.on("Issue", {
         method: "obour_ticketing.tasks.get_assignees",
         args: { docname: frm.doc.name },
         callback: function (response) {
-          //   console.log(r.message);
           if (frm.doc.assign_to) {
-            // console.log(response.message.length);
-            //   frappe.db.get_value("Issue", frm.doc.name, "assign_to");
-            // .then(function (response) {
-            //   let assignee = response.message.assign_to;
-            //   console.log(assignee);
-            // frm.call({
-            //   method: "frappe.desk.form.assign_to.remove",
-            //   args: {
-            //     doctype: "Issue",
-            //     name: frm.doc.name,
-            //     assign_to: response.message[0],
-            //   },
-            //   callback: function (r) {
             frm.call({
               method: "frappe.desk.form.assign_to.add",
               args: {
                 assign_to: [frm.doc.assign_to],
                 doctype: "Issue",
                 name: frm.doc.name,
-                description: "Escalate ....",
               },
-              callback(frm) {
-                if (frappe.session.user != frm.doc.assign_to) {
-                  frm.events.set_readonly(frm);
-                }
-              },
+              callback(r) {},
             });
-            //   },
-            // });
-            // });
           }
         },
       });
+  },
+
+  reset_service_level_agreement: function (frm) {
+    let reset_sla = new frappe.ui.Dialog({
+      title: __("Reset Service Level Agreement"),
+      fields: [
+        {
+          fieldtype: "Data",
+          fieldname: "reason",
+          label: __("Reason"),
+          reqd: 1,
+        },
+      ],
+      primary_action_label: __("Reset"),
+      primary_action: (values) => {
+        reset_sla.disable_primary_action();
+        reset_sla.hide();
+        reset_sla.clear();
+
+        frappe.show_alert({
+          indicator: "green",
+          message: __("Resetting Service Level Agreement."),
+        });
+
+        frm.call(
+          "reset_service_level_agreement",
+          {
+            reason: values.reason,
+            user: frappe.session.user_email,
+          },
+          () => {
+            reset_sla.enable_primary_action();
+            frm.refresh();
+            frappe.msgprint(__("Service Level Agreement was reset."));
+          }
+        );
+      },
+    });
+
+    reset_sla.show();
   },
 
   get_assigned_users: async function (frm) {
@@ -277,27 +374,27 @@ function set_time_to_resolve_and_response(frm) {
 		</div>`
   );
 
-  if (time_to_respond.indicator == "green") {
-    if (frm.doc.response_status != "Still") {
-      frm.set_value("response_status", "Still");
-      frm.save();
-    }
-  } else if (time_to_respond.indicator == "red") {
-    if (frm.doc.response_status != "Overdue") {
-      frm.set_value("response_status", "Overdue");
-      frm.save();
-    }
-  }
+  // if (time_to_respond.indicator == "green") {
+  //   if (frm.doc.response_status != "Still") {
+  //     frm.set_value("response_status", "Still");
+  //     frm.save();
+  //   }
+  // } else if (time_to_respond.indicator == "red") {
+  //   if (frm.doc.response_status != "Overdue") {
+  //     frm.set_value("response_status", "Overdue");
+  //     frm.save();
+  //   }
+  // }
 
-  if (time_to_resolve.indicator == "green") {
-    if (frm.doc.resolution_status != "Still") {
-      frm.set_value("resolution_status", "Still");
-      frm.save();
-    }
-  } else if (time_to_resolve.indicator == "red") {
-    if (frm.doc.resolution_status != "Overdue") {
-      frm.set_value("resolution_status", "Overdue");
-      frm.save();
-    }
-  }
+  // if (time_to_resolve.indicator == "green") {
+  //   if (frm.doc.resolution_status != "Still") {
+  //     frm.set_value("resolution_status", "Still");
+  //     frm.save();
+  //   }
+  // } else if (time_to_resolve.indicator == "red") {
+  //   if (frm.doc.resolution_status != "Overdue") {
+  //     frm.set_value("resolution_status", "Overdue");
+  //     frm.save();
+  //   }
+  // }
 }

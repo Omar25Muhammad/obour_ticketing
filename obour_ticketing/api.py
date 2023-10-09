@@ -3,6 +3,7 @@ from frappe.utils import cint, get_url_to_form
 from frappe import sendmail, _
 from frappe.desk.form.assign_to import add
 from obour_ticketing.tasks import send
+from typing import List, Dict, Any
 
 
 @frappe.whitelist()
@@ -314,3 +315,45 @@ def get_email_template(name, doc):
     message = frappe.render_template(email_message, args)
 
     return email_template.subject, message
+
+
+def detect_duplicates(
+    childtable: List[Dict[str, Any]],
+    key_field: str,
+    error_msg: str = _("Duplicates Found!"),
+) -> None:
+    """
+    Detect duplicates in a table (Childtable) field based on a specified key field.
+
+    Parameters:
+        childtable (List[Dict[str, Any]]): the table field itself.
+        key_field (str): The field in the childtable to check for duplicates.
+        error_msg (str, optional): The error message to raise if duplicates are found (default is 'Duplicates Found!').
+
+    Raises:
+        frappe.ValidationError: If duplicates are found based on the specified key field.
+
+    Credit:
+        This function is made with love by Eng. Omar M. K. Shehada ^ ^
+        الخوارزمية العُمَرية لاكتشاف التكرار في الجوانب الخلفية
+
+    Usage:
+        >>> def validate(self):
+            detect_duplicates(self.asrf_items, 'item_no')
+
+        >>> def validate(self):
+            detect_duplicates(self.asrf_items, 'item_no', 'لا يمكن تكرار العنصر أكثر من مرة واحدة')
+
+        >>> tables = {
+            "technicians": "user_email",
+            "supervisor_data": "supervisor_email",
+            "administrator_data": "admin_email",
+            }
+
+            for table, email_field in tables.items():
+                detect_duplicates(getattr(self, table), email_field)
+    """
+    original_rows = [i.get(key_field) for i in childtable]
+    checker = set(original_rows)
+    if len(original_rows) != len(checker):
+        frappe.throw(error_msg)

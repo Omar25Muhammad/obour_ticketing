@@ -27,7 +27,6 @@ class CustomIssue(Issue):
         # self.add_status_reason()
         super().validate()
 
-
     def update_agreement_status(self):
         # Added By Omar
         group = frappe.get_doc("Ticketing Groups", self.ticketing_group)

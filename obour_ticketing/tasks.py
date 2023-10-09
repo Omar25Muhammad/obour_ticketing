@@ -5,6 +5,7 @@ from frappe import _
 from frappe.utils import add_to_date, now_datetime, today
 import re
 from frappe.desk.form.assign_to import remove
+from frappe import publish_realtime
 
 # from obour_ticketing.api import create_notification_log
 
@@ -232,4 +233,11 @@ def get_assignees(docname):
             remove("Issue", docname, i)
             frappe.db.commit()
 
-        return assignees
+        # return assignees
+
+
+@frappe.whitelist(allow_guest=True)
+def reload_page():
+    # Trigger a page reload for all users
+    # message = {"doctype": doctype, "docname": docname, "reload_page": 1}
+    publish_realtime(event="reload_page")
