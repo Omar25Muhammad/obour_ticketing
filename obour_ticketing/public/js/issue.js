@@ -71,35 +71,37 @@ frappe.ui.form.on("Issue", {
           }
         });
 
-      frm
-        .add_custom_button(__("Hold Ticket"), () => {
-          // frm.doc.status = "On Hold";
-          frm.set_value("status", "On Hold");
-          frm.refresh_fields();
-          // frm.reload_doc();
-          frm.save();
-        })
-        .css({
-          color: "white",
-          "background-color": "#d41f3d",
-          "font-weight": "600",
-        });
-
-      if (frm.doc.assign_to)
+      if (frm.doc.assign_to && frm.doc.assign_to == frappe.session.user) {
         frm
-          .add_custom_button(__("Mark As Resolve"), () => {
+          .add_custom_button(__("Hold Ticket"), () => {
             // frm.doc.status = "On Hold";
-            frm.set_value("status", "Resolved");
-            frm.set_df_property("section_break_19", "hidden", 0);
+            frm.set_value("status", "On Hold");
             frm.refresh_fields();
             // frm.reload_doc();
             frm.save();
           })
           .css({
             color: "white",
-            "background-color": "limegreen",
+            "background-color": "#d41f3d",
             "font-weight": "600",
           });
+
+        if (frm.doc.assign_to)
+          frm
+            .add_custom_button(__("Mark As Resolve"), () => {
+              // frm.doc.status = "On Hold";
+              frm.set_value("status", "Resolved");
+              frm.set_df_property("section_break_19", "hidden", 0);
+              frm.refresh_fields();
+              // frm.reload_doc();
+              frm.save();
+            })
+            .css({
+              color: "white",
+              "background-color": "limegreen",
+              "font-weight": "600",
+            });
+      }
 
       frm
         .add_custom_button(__("Send Comment to User"), () => {

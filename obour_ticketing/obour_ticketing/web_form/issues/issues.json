@@ -23,7 +23,7 @@
  "is_standard": 1,
  "login_required": 1,
  "max_attachment_size": 1,
- "modified": "2023-10-12 05:12:20.415988",
+ "modified": "2023-10-12 13:21:47.031007",
  "modified_by": "Administrator",
  "module": "Obour Ticketing",
  "name": "issues",
@@ -66,7 +66,7 @@
   },
   {
    "allow_read_on_all_link_options": 0,
-   "default": "",
+   "default": "Un Assigned",
    "fieldname": "status",
    "fieldtype": "Select",
    "hidden": 0,
