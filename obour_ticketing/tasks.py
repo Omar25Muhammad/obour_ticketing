@@ -1,8 +1,9 @@
+import time
 import frappe
 import requests
 import json
 from frappe import _
-from frappe.utils import add_to_date, now_datetime, today
+from frappe.utils import add_to_date, now_datetime, today, get_url_to_form
 import re
 from frappe.desk.form.assign_to import remove
 from frappe import publish_realtime
@@ -186,12 +187,12 @@ def set_response_resolution_status(issue):
             frappe.db.commit()
 
 
-def create_notification_log(recipients, msg, doc, doc_link):
+@frappe.whitelist()
+def create_notification_log(recipients, msg, doctype, doc) -> None:
+    doc = frappe.get_doc(doctype, doc)
+    doc_link = get_url_to_form(doctype, doc.name)
+
     for user in recipients:
-        if not frappe.db.exists("User", user):
-            continue
-        # if user.lower() == "administrator":
-        #     continue
         notify_log = frappe.new_doc("Notification Log")
         notify_log.subject = msg
         notify_log.for_user = user
@@ -199,6 +200,9 @@ def create_notification_log(recipients, msg, doc, doc_link):
         notify_log.email_content = (
             f"""<a href="{doc_link}" style="cursor: pointer">{doc.name}</a>"""
         )
+        notify_log.document_type = doctype
+        notify_log.document_name = doc.name
+
         notify_log.insert(ignore_permissions=True)
         frappe.db.commit()
 
@@ -207,25 +211,75 @@ def notify_times():
     for iss in frappe.get_list("Issue", pluck="name"):
         iss = frappe.get_doc("Issue", iss)
         if iss.status == "Open" and iss.creation <= iss.response_by:
-            create_notification_log(["Administrator"], "Time's Up!", iss, iss.name)
+            # if frappe.db.exists(
+            #     "Notification Log",
+            #     frappe.get_all(
+            #         "Notification Log",
+            #         filters={
+            #             "document_type": "Issue",
+            #             "document_name": iss.name,
+            #         },
+            #         pluck="name",
+            #     )[0],
+            # ):
+            #     time.sleep(300)
+            #     create_notification_log(
+            #         ["Administrator"], "Response Time's Up!", "Issue", iss.name
+            #     )
+            #     frappe.sendmail(
+            #         recipients=["o.shehada@ard.ly"],
+            #         subject=f"Response Time's Up!",
+            #         message=f"Time's Up for Ticket {iss.name} for response time",
+            #         delayed=False,
+            #     )
+            # else:
+            create_notification_log(
+                ["Administrator"], "Response Time's Up!", "Issue", iss.name
+            )
             frappe.sendmail(
                 recipients=["o.shehada@ard.ly"],
-                subject=f"Time's Up!",
+                subject=f"Response Time's Up!",
                 message=f"Time's Up for Ticket {iss.name} for response time",
                 delayed=False,
             )
         if iss.status == "Open" and iss.creation <= iss.resolution_by:
+            # if frappe.db.exists(
+            #     "Notification Log",
+            #     frappe.get_all(
+            #         "Notification Log",
+            #         filters={
+            #             "document_type": "Issue",
+            #             "document_name": iss.name,
+            #         },
+            #         pluck="name",
+            #     )[0],
+            # ):
+            #     time.sleep(300)
+            #     create_notification_log(
+            #         ["Administrator"], "Resoultion Time's Up!", "Issue", iss.name
+            #     )
+            #     frappe.sendmail(
+            #         recipients=["o.shehada@ard.ly"],
+            #         subject=f"Resoultion Time's Up!",
+            #         message=f"Time's Up for Ticket {iss.name} for resolution time",
+            #         delayed=False,
+            #     )
+            # else:
+            create_notification_log(
+                ["Administrator"], "Response Time's Up!", "Issue", iss.name
+            )
             frappe.sendmail(
                 recipients=["o.shehada@ard.ly"],
-                subject=f"Time's Up!",
-                message=f"Time's Up for Ticket {iss.name} for resolution time",
+                subject=f"Response Time's Up!",
+                message=f"Time's Up for Ticket {iss.name} for response time",
                 delayed=False,
             )
 
 
 @frappe.whitelist()
 def get_assignees(docname):
-    assignees = frappe.get_doc("Issue", docname)._assign
+    iss = frappe.get_doc("Issue", docname)
+    assignees = iss._assign
     if assignees:
         assignees = json.loads(assignees)
 
@@ -233,11 +287,25 @@ def get_assignees(docname):
             remove("Issue", docname, i)
             frappe.db.commit()
 
-        # return assignees
+    # return assignees
 
 
 @frappe.whitelist(allow_guest=True)
-def reload_page():
+def reload_page(event: str):
     # Trigger a page reload for all users
     # message = {"doctype": doctype, "docname": docname, "reload_page": 1}
-    publish_realtime(event="reload_page")
+    publish_realtime(event=event)
+
+
+# @frappe.whitelist()
+# def test_fakaka():
+#     create_notification_log(
+#         ["Administrator"], "Response Time's Up!", "Issue", "ISS-2023-00030"
+#     )
+
+
+@frappe.whitelist()
+def clear_field_assign_to(docname):
+    iss = frappe.get_doc("Issue", docname)
+    frappe.db.set_value(iss.doctype, iss.name, "assign_to", "")
+    frappe.db.commit()

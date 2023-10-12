@@ -100,5 +100,22 @@
   "property_type": "Data",
   "row_name": null,
   "value": "format:ISS-{YYYY}-{#####}"
+ },
+ {
+  "default_value": null,
+  "doc_type": "Customer",
+  "docstatus": 0,
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "account_manager",
+  "modified": "2023-10-11 12:59:25.194894",
+  "name": "Customer-account_manager-fieldtype",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "property": "fieldtype",
+  "property_type": "Select",
+  "row_name": null,
+  "value": "Data"
  }
 ]

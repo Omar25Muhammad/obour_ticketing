@@ -8,6 +8,7 @@ from frappe import _
 from frappe.utils import cint, escape_html
 from bs4 import BeautifulSoup
 from frappe.desk.form.load import get_attachments
+from obour_ticketing.tasks import reload_page, get_assignees, clear_field_assign_to
 
 
 class CustomIssue(Issue):
@@ -19,6 +20,7 @@ class CustomIssue(Issue):
 
     def validate(self):
         # print(f"\n\n\n\n{frappe.get_doc('Issue', self.name)._assign}\n\n\n\n")
+
         prev_status = frappe.db.get_value("Issue", self.name, "status")
         if self.status == "Closed" and prev_status != "Closed":
             self.db_set("agreement_status", "Fulfilled")
@@ -26,6 +28,75 @@ class CustomIssue(Issue):
         #     self.db_set("agreement_status", "Ongoing")
         # self.add_status_reason()
         super().validate()
+        old_assign_to = frappe.db.get_value(
+            self.doctype, self.name, "assign_to", self.assign_to
+        )
+        new_assign_to = self.assign_to
+        if old_assign_to != new_assign_to:
+            frappe.publish_realtime(event="reload_doc")
+
+    def before_save(self):
+        if not self.is_new():
+            old_ticketing_group = frappe.db.get_value(
+                self.doctype, self.name, "ticketing_group", self.ticketing_group
+            )
+            new_ticketing_group = self.ticketing_group
+
+            if old_ticketing_group != new_ticketing_group:
+                get_assignees(self.name)
+                # clear_field_assign_to(self.name)
+                self.assign_to = ""
+                self.assign_to_full_name = ""
+                self.custom_reset_sla(
+                    reason=f"Changing Department from {frappe.bold(old_ticketing_group)} to {frappe.bold(new_ticketing_group)}"
+                )
+                frappe.publish_realtime(event="reset_sla_omar")
+
+    # def after_save(self):
+    #     old_assign_to = frappe.db.get_value(
+    #         self.doctype, self.name, "assign_to", self.assign_to
+    #     )
+    #     new_assign_to = self.assign_to
+    #     if old_assign_to != new_assign_to:
+    #         frappe.publish_realtime(event="reload_doc")
+
+    @frappe.whitelist()
+    def custom_reset_sla(self, reason):
+        if not frappe.db.get_single_value(
+            "Support Settings", "allow_resetting_service_level_agreement"
+        ):
+            frappe.throw(
+                _("Allow Resetting Service Level Agreement from Support Settings.")
+            )
+
+        frappe.get_doc(
+            {
+                "doctype": "Comment",
+                "comment_type": "Info",
+                "reference_doctype": self.doctype,
+                "reference_name": self.name,
+                "comment_email": frappe.session.user_email,
+                "content": "resetted Service Level Agreement - {0}".format(_(reason)),
+            }
+        ).insert(ignore_permissions=True)
+
+        self.service_level_agreement_creation = frappe.utils.now_datetime()
+        super().set_response_and_resolution_time(
+            priority=self.priority, service_level_agreement=self.service_level_agreement
+        )
+        self.agreement_status = "Ongoing"
+
+        frappe.msgprint("SLA reset successfully!")
+        # self.save()
+
+    # frm.call("reset_service_level_agreement", {
+    # 	reason: values.reason,
+    # 	user: frappe.session.user_email
+    # }, () => {
+    # 	reset_sla.enable_primary_action();
+    # 	frm.refresh();
+    # 	frappe.msgprint(__("Service Level Agreement was reset."));
+    # });
 
     def update_agreement_status(self):
         # Added By Omar
@@ -153,6 +224,11 @@ class CustomWebForm(WebForm):
                 reference_name=name,
                 comment_type="Comment",
             ),
+            or_filters=[
+                ["owner", "=", frappe.session.user],
+                ["published", "=", 1],
+                ["send_to_portal", "=", 1],
+            ],
         )
 
         for row in comments:

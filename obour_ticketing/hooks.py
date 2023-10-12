@@ -63,11 +63,12 @@ fixtures = [
                     "Support Settings-close_issue_after_days-default",
                     "ToDo-priority-options",
                     "Issue-main-autoname",
+                    "Customer-account_manager-fieldtype",
                 ],
             ]
         ],
     },
-     {
+    {
         "dt": "Email Template",
         "filters": [
             [
@@ -178,11 +179,11 @@ doc_events = {
             "obour_ticketing.api.send_email_issue_initiator",
             "obour_ticketing.api.send_email_ticket_group",
         ],
-        # "on_update": [
-        #                 "obour_ticketing.api.send_email_issue_status",
-        #                 "obour_ticketing.api.send_notification",
-        #                 "obour_ticketing.api.send_slack_notification",
-        #             ],
+        "on_update": [
+            "obour_ticketing.api.send_email_issue_status",
+            #                 "obour_ticketing.api.send_notification",
+            #                 "obour_ticketing.api.send_slack_notification",
+        ],
     },
     "User": {
         "after_insert": "obour_ticketing.api.add_ticket_role",
@@ -199,11 +200,11 @@ scheduler_events = {
     # 	],
     "daily": ["obour_ticketing.tasks.auto_close_tickets"],
     "cron": {
-        "* * * * *": ["obour_ticketing.tasks.notify_times"],
-        "0/15 * * * *": [
-            "obour_ticketing.tasks.send_slack_notification",
-            "obour_ticketing.tasks.set_response_resolution_status",
-        ],
+        # "* * * * *": ["obour_ticketing.tasks.notify_times"],
+        # "0/15 * * * *": [
+        #     "obour_ticketing.tasks.send_slack_notification",
+        #     "obour_ticketing.tasks.set_response_resolution_status",
+        # ],
         "0 23 * * *": ["obour_ticketing.tasks.ticket_summary"],
     }
     # 	"weekly": [

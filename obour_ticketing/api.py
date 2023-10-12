@@ -1,9 +1,11 @@
 import frappe
-from frappe.utils import cint, get_url_to_form
+from frappe.utils import cint, get_url_to_form, strip_html
 from frappe import sendmail, _
 from frappe.desk.form.assign_to import add
 from obour_ticketing.tasks import send
 from typing import List, Dict, Any
+from frappe.utils import validate_email_address
+from frappe.desk.form.load import get_attachments
 
 
 @frappe.whitelist()
@@ -127,16 +129,44 @@ def send_email_issue_initiator(doc, method):
         return
 
     if cint(doc.via_customer_portal):
-        subject, message = get_email_template("New Ticket", doc)
+        subject, message = get_email_template("New Ticket Init", doc)
         try:
             sendmail(
                 recipients=[frappe.session.user],
-                subject=subject,
+                subject="New Ticket Raised",
                 message=message,
                 delayed=False,
             )
-        except:
-            ...
+        except Exception as e:
+            frappe.log_error(str(e), "Email sending failed while raising new ticket")
+            frappe.msgprint(
+                _(
+                    "Email sending failed! See Error Log",
+                )
+            )
+
+        # Send Email Notification to Account Manager (if found)
+        if doc.customer:
+            account_manager_email = frappe.get_doc(
+                "Customer", doc.customer
+            ).account_manager
+            if account_manager_email and validate_email_address(account_manager_email):
+                try:
+                    sendmail(
+                        recipients=[account_manager_email],
+                        subject="New Ticket Raised from Your Customer",
+                        message=message,
+                        delayed=False,
+                    )
+                except Exception as e:
+                    frappe.log_error(
+                        str(e), "Email sending failed while raising new ticket"
+                    )
+                    frappe.msgprint(
+                        _(
+                            "Email sending failed! See Error Log",
+                        )
+                    )
 
 
 def send_email_ticket_group(doc, method):
@@ -144,10 +174,24 @@ def send_email_ticket_group(doc, method):
     recipients = get_recipients(doc)
     if len(recipients) > 0:
         subject, message = get_email_template("New Ticket", doc)
+        attachments = [d.name for d in get_attachments("Issue", doc.name)]
+        # attachments.append(frappe.attach_print("Issue", doc.name))
+
         try:
-            sendmail(recipients=recipients, subject=subject, message=message)
-        except:
-            ...
+            sendmail(
+                recipients=recipients,
+                subject=subject,
+                message=message,
+                delayed=False,
+                # attachments=attachments,
+            )
+        except Exception as e:
+            frappe.log_error(str(e), "Email sending failed while raising new ticket")
+            frappe.msgprint(
+                _(
+                    "Email sending failed! See Error Log",
+                )
+            )
 
 
 def send_email_issue_status(doc, method):
@@ -302,7 +346,7 @@ def get_email_template(name, doc):
     if not email_template:
         return (
             name,
-            f"Subject: {doc.subject} \n <br> Please create email temlate with name: '{name}' to set the message",
+            f"Subject: {doc.subject} \n <br> Please create email template with name: '{name}' to set the message",
         )
 
     email_template = frappe.get_doc("Email Template", email_template)
@@ -357,3 +401,162 @@ def detect_duplicates(
     checker = set(original_rows)
     if len(original_rows) != len(checker):
         frappe.throw(error_msg)
+
+
+@frappe.whitelist()
+def escalate_to_supervisor(docname, from_user):
+    issue = frappe.get_doc("Issue", docname)
+
+    ticketing_group = frappe.get_doc("Ticketing Groups", issue.ticketing_group)
+    recipients = []
+
+    if len(ticketing_group.supervisor_data):
+        for supervisor in ticketing_group.supervisor_data:
+            if supervisor.active:
+                recipients.append(supervisor.supervisor_email)
+
+    if len(recipients):
+        to_supervisor = recipients[0]
+        if frappe.db.exists("User", to_supervisor):
+            args = {
+                "assign_to": [to_supervisor],
+                "doctype": "Issue",
+                "name": issue.name,
+                "description": "Escalate...",
+            }
+            add(args)
+
+            frappe.db.set_value(issue.doctype, issue.name, "assign_to", to_supervisor)
+            frappe.db.set_value(
+                issue.doctype,
+                issue.name,
+                "assign_to_full_name",
+                frappe.get_doc("User", to_supervisor).full_name,
+            )
+            frappe.db.commit()
+
+            frappe.publish_realtime(event="reload_doc")
+
+            description = f"{frappe.session.user_fullname} esclated a new Ticket with id {issue.name} to your group"
+            description_html = (
+                "<div>{0}</div>".format(description) if description else None
+            )
+
+            try:
+                doc_link = get_url_to_form(issue.doctype, issue.name)
+                email_subject = strip_html(f"Escalation on Ticket {issue.name}")
+
+                frappe.sendmail(
+                    recipients=[
+                        supervisor.supervisor_email
+                        for supervisor in ticketing_group.supervisor_data
+                    ],
+                    subject=email_subject,
+                    template="new_notification",
+                    args={
+                        "body_content": f"{frappe.bold(from_user)} escalated a new Ticket with id {frappe.bold(issue.name)} to your group",
+                        "description": issue.description,
+                        "document_type": f"Ticketing Group: {issue.doctype}",
+                        "document_name": issue.name,
+                        "doc_link": doc_link,
+                    },
+                    now=frappe.flags.in_test,
+                    delayed=False,
+                )
+
+            except Exception as e:
+                # Handle the exception, e.g., log the error
+                frappe.log_error(str(e), "Email sending failed while Escalation")
+                frappe.msgprint(
+                    _(
+                        "Email sending failed! See Error Log",
+                    )
+                )
+
+
+@frappe.whitelist()
+def escalate_to_admin(docname, from_user):
+    issue = frappe.get_doc("Issue", docname)
+
+    ticketing_group = frappe.get_doc("Ticketing Groups", issue.ticketing_group)
+    recipients = []
+
+    if len(ticketing_group.administrator_data):
+        for admin in ticketing_group.administrator_data:
+            if admin.active:
+                recipients.append(admin.admin_email)
+
+    if len(recipients):
+        to_admin = recipients[0]
+        if frappe.db.exists("User", to_admin):
+            args = {
+                "assign_to": [to_admin],
+                "doctype": "Issue",
+                "name": issue.name,
+                "description": "Escalate...",
+            }
+            add(args)
+
+            frappe.db.set_value(issue.doctype, issue.name, "assign_to", to_admin)
+            frappe.db.set_value(
+                issue.doctype,
+                issue.name,
+                "assign_to_full_name",
+                frappe.get_doc("User", to_admin).full_name,
+            )
+            frappe.db.commit()
+
+            frappe.publish_realtime(event="reload_doc")
+
+            description = f"{from_user} escalated a new Ticket with id {issue.name} to your group."
+            description_html = (
+                "<div>{0}</div>".format(description) if description else None
+            )
+
+            try:
+                doc_link = get_url_to_form(issue.doctype, issue.name)
+                email_subject = strip_html(f"Escalation on Ticket {issue.name}")
+
+                frappe.sendmail(
+                    recipients=[
+                        admin.admin_email
+                        for admin in ticketing_group.administrator_data
+                    ],
+                    subject=email_subject,
+                    template="new_notification",
+                    args={
+                        "body_content": f"{frappe.bold(from_user)} escalated a new Ticket with id {frappe.bold(issue.name)} to your group",
+                        "description": issue.description,
+                        "document_type": f"Ticketing Group: {issue.doctype}",
+                        "document_name": issue.name,
+                        "doc_link": doc_link,
+                    },
+                    now=frappe.flags.in_test,
+                    delayed=False,
+                )
+
+            except Exception as e:
+                # Handle the exception, e.g., log the error
+                frappe.log_error(str(e), "Email sending failed while Escalation")
+                frappe.msgprint(
+                    _(
+                        "Email sending failed! See Error Log",
+                    )
+                )
+
+
+@frappe.whitelist()
+def comment_portal(docname: str, comment: str, comment_by: str):
+    frappe.get_doc(
+        {
+            "doctype": "Comment",
+            "comment_type": "Comment",
+            "reference_doctype": "Issue",
+            "reference_name": docname,
+            "comment_email": frappe.session.user_email,
+            "comment_by": comment_by,
+            "content": "{0}".format(_(comment)),
+            "send_to_portal": 1,
+        }
+    ).insert(ignore_permissions=True)
+    frappe.db.commit()
