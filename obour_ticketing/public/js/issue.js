@@ -13,7 +13,7 @@ frappe.ui.form.on("Issue", {
     $(".form-links").hide();
     frm.remove_custom_button("Task", "Create");
     frm.remove_custom_button("Close");
-    // $(".form-assignments").hide();
+    $(".form-assignments").hide();
     // $(".form-attachments").hide();
     $(".form-shared").hide();
     $(".form-reviews").hide();
@@ -56,44 +56,98 @@ frappe.ui.form.on("Issue", {
   },
   // refresh: async function (frm) {
   refresh: async function (frm) {
-    frm.add_custom_button(__("Send Comment to User"), () => {
-      let d = new frappe.ui.Dialog({
-        title: "Comment to User",
-        fields: [
-          {
-            label: "Comment",
-            fieldname: "comment",
-            fieldtype: "Text Editor",
-          },
-        ],
-        size: "large", // small, large, extra-large
-        primary_action_label: "Comment",
-        primary_action(values) {
-          console.log(values.comment);
-          frm.call({
-            method: "obour_ticketing.api.comment_portal",
-            args: {
-              docname: frm.doc.name,
-              comment: values.comment,
-              comment_by: frappe.session.user_fullname,
-            },
-            callback: (r) => {
-              frm.reload_doc();
-              frappe.show_alert(
-                {
-                  message: __("Your comment has been submitted successfully!"),
-                  indicator: "green",
+    // if (!frm.doc.resolution_details) {
+    //   frm.set_df_property("section_break_19", "hidden", 1);
+    // } else {
+    //   frm.set_df_property("section_break_19", "hidden", 0);
+    // }
+    if (!frm.is_new()) {
+      frappe.db
+        .get_value("Issue", frm.doc.name, "assign_to")
+        .then(function (response) {
+          let assign_to = response.message.assign_to;
+          if (assign_to != null) {
+            frm.set_df_property("assign_to", "reqd", 1);
+          }
+        });
+
+      frm
+        .add_custom_button(__("Hold Ticket"), () => {
+          // frm.doc.status = "On Hold";
+          frm.set_value("status", "On Hold");
+          frm.refresh_fields();
+          // frm.reload_doc();
+          frm.save();
+        })
+        .css({
+          color: "white",
+          "background-color": "#d41f3d",
+          "font-weight": "600",
+        });
+
+      if (frm.doc.assign_to)
+        frm
+          .add_custom_button(__("Mark As Resolve"), () => {
+            // frm.doc.status = "On Hold";
+            frm.set_value("status", "Resolved");
+            frm.set_df_property("section_break_19", "hidden", 0);
+            frm.refresh_fields();
+            // frm.reload_doc();
+            frm.save();
+          })
+          .css({
+            color: "white",
+            "background-color": "limegreen",
+            "font-weight": "600",
+          });
+
+      frm
+        .add_custom_button(__("Send Comment to User"), () => {
+          let d = new frappe.ui.Dialog({
+            title: "Comment to User",
+            fields: [
+              {
+                label: "Comment",
+                fieldname: "comment",
+                fieldtype: "Text Editor",
+              },
+            ],
+            size: "large", // small, large, extra-large
+            primary_action_label: "Comment",
+            primary_action(values) {
+              console.log(values.comment);
+              frm.call({
+                method: "obour_ticketing.api.comment_portal",
+                args: {
+                  docname: frm.doc.name,
+                  comment: values.comment,
+                  comment_by: frappe.session.user_fullname,
                 },
-                5
-              );
+                callback: (r) => {
+                  frm.reload_doc();
+                  frappe.show_alert(
+                    {
+                      message: __(
+                        "Your comment has been submitted successfully!"
+                      ),
+                      indicator: "green",
+                    },
+                    5
+                  );
+                },
+              });
+              d.hide();
             },
           });
-          d.hide();
-        },
-      });
 
-      d.show();
-    });
+          d.show();
+        })
+        .css({
+          color: "white",
+          "background-color": "#328fcdcf",
+          "font-weight": "600",
+        });
+    }
     $(".form-links").hide();
 
     // frappe.realtime.on("reload_page", (data) => {
@@ -153,15 +207,15 @@ frappe.ui.form.on("Issue", {
       frappe.session.user != "Administrator"
     )
       frm.set_df_property("ticketing_group", "read_only", 1);
-    // if (frm.doc.assign_to) {
-    //   if (frappe.session.user != frm.doc.assign_to) {
-    //     frm.events.set_readonly(frm);
-    //   }
-    // }
+    if (frm.doc.assign_to) {
+      if (frappe.session.user != frm.doc.assign_to) {
+        frm.events.set_readonly(frm);
+      }
+    }
     // remove create button
     frm.remove_custom_button("Task", "Create");
     frm.remove_custom_button("Close");
-    // $(".form-assignments").hide();
+    $(".form-assignments").hide();
     // $(".form-attachments").hide();
     $(".form-shared").hide();
     $(".form-reviews").hide();
@@ -322,6 +376,7 @@ frappe.ui.form.on("Issue", {
       }
     }
   },
+
   //   before_validate(frm) {
   //     if (!frm.is_new())
   //       frm.call({
@@ -347,11 +402,11 @@ frappe.ui.form.on("Issue", {
     //     );
     //   }
     //   This to get the admin and supervisor out of issue when they change the group
-    // if (frm.doc.assign_to) {
-    //   if (frappe.session.user != frm.doc.assign_to) {
-    //     frm.events.set_readonly(frm);
-    //   }
-    // }
+    if (frm.doc.assign_to) {
+      if (frappe.session.user != frm.doc.assign_to) {
+        frm.events.set_readonly(frm);
+      }
+    }
     // if (!frm.is_new() && frm.doc.ticketing_group) {
     //   frm.call({
     //     method: "obour_ticketing.tasks.reload_page",
@@ -367,33 +422,42 @@ frappe.ui.form.on("Issue", {
     //   .then(function (response) {
     //     let ticketing_group = response.message.ticketing_group;
     //     if (ticketing_group != frm.doc.ticketing_group) {
-    //       frm.call({
-    //         // method: "obour_ticketing.tasks.reload_page",
-    //         method: "obour_ticketing.override.CustomIssue.custom_reset_sla",
-    //         // args: { event: "reset_sla_omar" },
-    //         callback(res) {
-    //           console.log("ok from server side");
-    //           // frappe.set_route("List", "Issue");
-    //         },
-    //       });
     //     }
     //   });
   },
   set_readonly(frm) {
-    $.each(frm.fields_dict, function (fieldname, field) {
-      frm.set_df_property(fieldname, "read_only", 1);
-      frm.refresh_fields();
-      frm.reload_doc();
-      //   }
-    });
+    // $.each(frm.fields_dict, function (fieldname, field) {
+    frm.set_df_property("subject", "read_only", 1);
+    frm.set_df_property("assign_to", "read_only", 1);
+    frm.set_df_property("ticketing_group", "read_only", 1);
+    frm.set_df_property("issue_type", "read_only", 1);
+    frm.set_df_property("customer", "read_only", 1);
+    frm.set_df_property("priority", "read_only", 1);
+    frm.set_df_property("attachments", "read_only", 1);
+    frm.set_df_property("description", "read_only", 1);
+    frm.set_df_property("service_level_agreement", "read_only", 1);
+    frm.set_df_property("resolution_details", "read_only", 1);
+    frm.refresh_fields();
+    // frm.reload_doc();
+    // frm.call({
+    //   method: "obour_ticketing.tasks.reload_page",
+    //   args: { event: "reload_doc" },
+    //   callback(res) {
+    //     console.log("ok");
+    //     // frappe.set_route("List", "Issue");
+    //   },
+    // });
+    //   }
+    // });
   },
   assign_to(frm) {
     if (!frm.is_new())
-      frm.call({
-        method: "obour_ticketing.tasks.get_assignees",
-        args: { docname: frm.doc.name },
-        callback: function (response) {
-          if (frm.doc.assign_to) {
+      if (frm.doc.assign_to)
+        frm.call({
+          method: "obour_ticketing.tasks.get_assignees",
+          args: { docname: frm.doc.name },
+          callback: function (response) {
+            // if (frm.doc.assign_to) {
             frm.call({
               method: "frappe.desk.form.assign_to.add",
               args: {
@@ -401,14 +465,19 @@ frappe.ui.form.on("Issue", {
                 doctype: "Issue",
                 name: frm.doc.name,
               },
-              callback(r) {},
+              callback(r) {
+                frm.set_value("status", "In Progress");
+                frm.refresh_fields();
+                // frm.reload_doc();
+              },
             });
-          } else {
-            frm.doc.assign_to_full_name = "";
-            frm.refresh_fields();
-          }
-        },
-      });
+            // }
+          },
+        });
+      else {
+        frm.doc.assign_to_full_name = "";
+        frm.refresh_fields();
+      }
   },
 
   // reset_service_level_agreement: function (frm) {

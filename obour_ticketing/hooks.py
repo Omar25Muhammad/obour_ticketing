@@ -64,6 +64,7 @@ fixtures = [
                     "ToDo-priority-options",
                     "Issue-main-autoname",
                     "Customer-account_manager-fieldtype",
+                    "Issue-status-options",
                 ],
             ]
         ],
@@ -108,7 +109,7 @@ app_include_js = "/assets/obour_ticketing/js/assign_to.js"
 
 # include js in doctype views
 doctype_js = {"Issue": "public/js/issue.js"}
-# doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
+doctype_list_js = {"Issue": "public/js/issue_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 

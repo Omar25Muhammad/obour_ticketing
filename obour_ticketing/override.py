@@ -52,6 +52,14 @@ class CustomIssue(Issue):
                 )
                 frappe.publish_realtime(event="reset_sla_omar")
 
+    def on_update(self):
+        super().on_update()
+        if self.status == "Un Assigned":
+            # self.status = "Open"
+            frappe.db.set_value(self.doctype, self.name, "status", "Open")
+            frappe.db.commit()
+            frappe.publish_realtime(event="reload_doc")
+
     # def after_save(self):
     #     old_assign_to = frappe.db.get_value(
     #         self.doctype, self.name, "assign_to", self.assign_to

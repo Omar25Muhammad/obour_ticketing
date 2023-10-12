@@ -287,6 +287,9 @@ def get_assignees(docname):
             remove("Issue", docname, i)
             frappe.db.commit()
 
+        # frappe.db.set_value("Issue", iss.name, "status", "In Progress")
+        # frappe.db.commit()
+
     # return assignees
 
 
