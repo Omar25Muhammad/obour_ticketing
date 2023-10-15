@@ -210,7 +210,8 @@ def create_notification_log(recipients, msg, doctype, doc) -> None:
 def notify_times():
     for iss in frappe.get_list("Issue", pluck="name"):
         iss = frappe.get_doc("Issue", iss)
-        if iss.status == "Open" and iss.creation <= iss.response_by:
+        recipients = get_recipients(iss)
+        if iss.status == "Un Assigned" and iss.creation <= iss.response_by:
             # if frappe.db.exists(
             #     "Notification Log",
             #     frappe.get_all(
@@ -234,15 +235,15 @@ def notify_times():
             #     )
             # else:
             create_notification_log(
-                ["Administrator"], "Response Time's Up!", "Issue", iss.name
+                recipients, "Response Time's Up!", "Issue", iss.name
             )
             frappe.sendmail(
-                recipients=["o.shehada@ard.ly"],
+                recipients=recipients,
                 subject=f"Response Time's Up!",
                 message=f"Time's Up for Ticket {iss.name} for response time",
                 delayed=False,
             )
-        if iss.status == "Open" and iss.creation <= iss.resolution_by:
+        if iss.status == "Un Assigned" and iss.creation <= iss.resolution_by:
             # if frappe.db.exists(
             #     "Notification Log",
             #     frappe.get_all(
@@ -266,10 +267,10 @@ def notify_times():
             #     )
             # else:
             create_notification_log(
-                ["Administrator"], "Response Time's Up!", "Issue", iss.name
+                recipients, "Response Time's Up!", "Issue", iss.name
             )
             frappe.sendmail(
-                recipients=["o.shehada@ard.ly"],
+                recipients=recipients,
                 subject=f"Response Time's Up!",
                 message=f"Time's Up for Ticket {iss.name} for response time",
                 delayed=False,
@@ -312,3 +313,41 @@ def clear_field_assign_to(docname):
     iss = frappe.get_doc("Issue", docname)
     frappe.db.set_value(iss.doctype, iss.name, "assign_to", "")
     frappe.db.commit()
+
+
+@frappe.whitelist()
+def set_assgined_to_me_the_moment():
+    # docs = frappe.get_all('Issue')
+    # for doc in docs:
+    #     doc = frappe.get_doc()
+
+    frappe.db.sql(f"update tabIssue set assigned_to_me = 0;")
+    frappe.db.sql(
+        f"update tabIssue set assigned_to_me = 1 where assign_to = '{frappe.session.user}';"
+    )
+    frappe.db.commit()
+
+
+def get_recipients(doc):
+    recipients = []
+    technicians = frappe.get_all(
+        "Ticketing User Table",
+        filters={"parent": doc.ticketing_group},
+        pluck="user_email",
+    )
+    supervisors = frappe.get_all(
+        "Ticketing Supervisor Table",
+        filters={"parent": doc.ticketing_group},
+        pluck="supervisor_email",
+    )
+    admins = frappe.get_all(
+        "Ticketing Administrator Table",
+        filters={"parent": doc.ticketing_group},
+        pluck="admin_email",
+    )
+
+    recipients = technicians + supervisors + admins
+    if doc.raised_by:
+        recipients.append(doc.raised_by)
+    recipients = list(set(recipients))
+    return recipients

@@ -43,6 +43,19 @@ def filter_assign_to_users(doctype, txt, searchfield, start, page_len, filters):
 
 
 @frappe.whitelist()
+def filter_assign_to_users_checker(ticketing_group: str):
+    """ """
+
+    query = f"""
+    SELECT user_email
+    FROM `tabTicketing User Table`
+    WHERE parent='{ticketing_group}'
+    """
+
+    return [i[0] for i in frappe.db.sql(query)]
+
+
+@frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def filter_assign_to_admins(doctype, txt, searchfield, start, page_len, filters):
     """ """
@@ -77,6 +90,27 @@ def filter_assign_to_admins(doctype, txt, searchfield, start, page_len, filters)
 
 
 @frappe.whitelist()
+def filter_assign_to_admins_checker(ticketing_group: str):
+    """ """
+
+    query = f"""
+        SELECT user_email
+        FROM `tabTicketing User Table`
+        WHERE parent='{ticketing_group}'
+        UNION
+        SELECT supervisor_email
+        FROM `tabTicketing Supervisor Table` 
+        WHERE parent='{ticketing_group}'
+        UNION
+        SELECT admin_email
+        FROM `tabTicketing Administrator Table` 
+        WHERE parent='{ticketing_group}';
+    """
+
+    return [i[0] for i in frappe.db.sql(query)]
+
+
+@frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def filter_assign_to_supers(doctype, txt, searchfield, start, page_len, filters):
     """ """
@@ -101,3 +135,20 @@ def filter_assign_to_supers(doctype, txt, searchfield, start, page_len, filters)
     """
 
     return frappe.db.sql(query)
+
+
+@frappe.whitelist()
+def filter_assign_to_supers_checker(ticketing_group: str):
+    """ """
+
+    query = f"""
+        SELECT user_email
+        FROM `tabTicketing User Table`
+        WHERE parent='{ticketing_group}'
+        UNION
+        SELECT supervisor_email
+        FROM `tabTicketing Supervisor Table` 
+        WHERE parent='{ticketing_group}'
+    """
+
+    return [i[0] for i in frappe.db.sql(query)]

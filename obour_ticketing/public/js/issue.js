@@ -2,6 +2,7 @@ frappe.ui.form.on("Issue", {
   setup(frm) {
     frappe.realtime.on("reset_sla_omar", (data) => {
       console.log("omar was here");
+      frm.refresh_fields();
       frappe.set_route("List", "Issue");
     });
 
@@ -66,7 +67,11 @@ frappe.ui.form.on("Issue", {
         .get_value("Issue", frm.doc.name, "assign_to")
         .then(function (response) {
           let assign_to = response.message.assign_to;
-          if (assign_to != null) {
+          if (
+            assign_to != null &&
+            frm.doc.status != "Un Assigned" &&
+            frm.doc.status != "Open"
+          ) {
             frm.set_df_property("assign_to", "reqd", 1);
           }
         });
@@ -439,6 +444,7 @@ frappe.ui.form.on("Issue", {
     frm.set_df_property("description", "read_only", 1);
     frm.set_df_property("service_level_agreement", "read_only", 1);
     frm.set_df_property("resolution_details", "read_only", 1);
+    hide_field("reset_service_level_agreement");
     frm.refresh_fields();
     // frm.reload_doc();
     // frm.call({
@@ -454,7 +460,16 @@ frappe.ui.form.on("Issue", {
   },
   assign_to(frm) {
     if (!frm.is_new())
-      if (frm.doc.assign_to)
+      if (frm.doc.assign_to) {
+        frm.call({
+          method: "obour_ticketing.queries.filter_assign_to_users_checker",
+          args: { ticketing_group: frm.doc.ticketing_group },
+          callback: (response) => {
+            console.log("Authorized Users: ");
+            console.log(response.message);
+          },
+        });
+
         frm.call({
           method: "obour_ticketing.tasks.get_assignees",
           args: { docname: frm.doc.name },
@@ -476,7 +491,7 @@ frappe.ui.form.on("Issue", {
             // }
           },
         });
-      else {
+      } else {
         frm.doc.assign_to_full_name = "";
         frm.refresh_fields();
       }

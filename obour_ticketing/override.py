@@ -9,6 +9,7 @@ from frappe.utils import cint, escape_html
 from bs4 import BeautifulSoup
 from frappe.desk.form.load import get_attachments
 from obour_ticketing.tasks import reload_page, get_assignees, clear_field_assign_to
+from obour_ticketing.api import send_email_ticket_group
 
 
 class CustomIssue(Issue):
@@ -47,14 +48,24 @@ class CustomIssue(Issue):
                 # clear_field_assign_to(self.name)
                 self.assign_to = ""
                 self.assign_to_full_name = ""
+                self.status = "Un Assigned"
                 self.custom_reset_sla(
                     reason=f"Changing Department from {frappe.bold(old_ticketing_group)} to {frappe.bold(new_ticketing_group)}"
                 )
+                send_email_ticket_group(frappe.get_doc("Issue", self.name), "")
                 frappe.publish_realtime(event="reset_sla_omar")
 
     def on_update(self):
         super().on_update()
-        if self.status == "Un Assigned":
+        old_ticketing_group = frappe.db.get_value(
+            self.doctype, self.name, "ticketing_group", self.ticketing_group
+        )
+        new_ticketing_group = self.ticketing_group
+        if (
+            self.modified_by not in {self.raised_by, "Administrator"}
+            and self.status == "Un Assigned"
+            and old_ticketing_group == new_ticketing_group
+        ):
             # self.status = "Open"
             frappe.db.set_value(self.doctype, self.name, "status", "Open")
             frappe.db.commit()

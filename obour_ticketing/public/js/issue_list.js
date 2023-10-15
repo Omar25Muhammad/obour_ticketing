@@ -4,7 +4,7 @@ frappe.listview_settings["Issue"] = {
   onload: function (listview) {
     frappe.route_options = {
       status: "",
-      //   assign_to: frappe.session.user,
+      assign_to: frappe.session.user,
     };
 
     var method = "erpnext.support.doctype.issue.issue.set_multiple_status";

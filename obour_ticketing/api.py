@@ -560,3 +560,8 @@ def comment_portal(docname: str, comment: str, comment_by: str):
         }
     ).insert(ignore_permissions=True)
     frappe.db.commit()
+
+
+@frappe.whitelist()
+def user_has_role(user_email: str, role: str) -> bool:
+    return role in frappe.get_roles(user_email)

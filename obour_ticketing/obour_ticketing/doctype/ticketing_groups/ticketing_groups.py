@@ -14,6 +14,16 @@ class TicketingGroups(Document):
             "supervisor_data": "supervisor_email",
             "administrator_data": "admin_email",
         }
+
+        for table, field in tables.items():
+            if table == "technicians":
+                continue
+            activity = [i.active for i in getattr(self, table)]
+            if not any(activity):
+                frappe.throw(
+                    f"One User Must be Active in the {table.replace('_', ' ').title()} Table."
+                )
+
         for table, email_field in tables.items():
             detect_duplicates(getattr(self, table), email_field)
 
