@@ -461,43 +461,120 @@ frappe.ui.form.on("Issue", {
   assign_to(frm) {
     if (!frm.is_new())
       if (frm.doc.assign_to) {
-        frm.call({
-          method: "obour_ticketing.queries.filter_assign_to_users_checker",
-          args: { ticketing_group: frm.doc.ticketing_group },
-          callback: (response) => {
-            console.log("Authorized Users: ");
-            console.log(response.message);
-            if (response.message.includes(frm.doc.assign_to)) {
-              // console.log("Ok");
-              frm.call({
-                method: "obour_ticketing.tasks.get_assignees",
-                args: { docname: frm.doc.name },
-                callback: function (response) {
-                  // if (frm.doc.assign_to) {
-                  frm.call({
-                    method: "frappe.desk.form.assign_to.add",
-                    args: {
-                      assign_to: [frm.doc.assign_to],
-                      doctype: "Issue",
-                      name: frm.doc.name,
-                    },
-                    callback(r) {
-                      frm.set_value("status", "In Progress");
-                      frm.refresh_fields();
-                      // frm.reload_doc();
-                    },
-                  });
-                  // }
-                },
-              });
-            } else {
-              frm.doc.assign_to = "";
-              frm.doc.assign_to_full_name = "";
-              frm.refresh_fields();
-              // frappe.throw("No");
-            }
-          },
-        });
+        if (frappe.user.has_role("Support Team"))
+          frm.call({
+            method: "obour_ticketing.queries.filter_assign_to_users_checker",
+            args: { ticketing_group: frm.doc.ticketing_group },
+            callback: (response) => {
+              console.log("Authorized Users: ");
+              console.log(response.message);
+              if (response.message.includes(frm.doc.assign_to)) {
+                // console.log("Ok");
+                frm.call({
+                  method: "obour_ticketing.tasks.get_assignees",
+                  args: { docname: frm.doc.name },
+                  callback: function (response) {
+                    // if (frm.doc.assign_to) {
+                    frm.call({
+                      method: "frappe.desk.form.assign_to.add",
+                      args: {
+                        assign_to: [frm.doc.assign_to],
+                        doctype: "Issue",
+                        name: frm.doc.name,
+                      },
+                      callback(r) {
+                        frm.set_value("status", "In Progress");
+                        frm.refresh_fields();
+                        // frm.reload_doc();
+                      },
+                    });
+                    // }
+                  },
+                });
+              } else {
+                frm.doc.assign_to = "";
+                frm.doc.assign_to_full_name = "";
+                frm.refresh_fields();
+                // frappe.throw("No");
+              }
+            },
+          });
+        if (frappe.user.has_role("Ticket Supervisors"))
+          frm.call({
+            method: "obour_ticketing.queries.filter_assign_to_supers_checker",
+            args: { ticketing_group: frm.doc.ticketing_group },
+            callback: (response) => {
+              console.log("Authorized Users: ");
+              console.log(response.message);
+              if (response.message.includes(frm.doc.assign_to)) {
+                // console.log("Ok");
+                frm.call({
+                  method: "obour_ticketing.tasks.get_assignees",
+                  args: { docname: frm.doc.name },
+                  callback: function (response) {
+                    // if (frm.doc.assign_to) {
+                    frm.call({
+                      method: "frappe.desk.form.assign_to.add",
+                      args: {
+                        assign_to: [frm.doc.assign_to],
+                        doctype: "Issue",
+                        name: frm.doc.name,
+                      },
+                      callback(r) {
+                        frm.set_value("status", "In Progress");
+                        frm.refresh_fields();
+                        // frm.reload_doc();
+                      },
+                    });
+                    // }
+                  },
+                });
+              } else {
+                frm.doc.assign_to = "";
+                frm.doc.assign_to_full_name = "";
+                frm.refresh_fields();
+                // frappe.throw("No");
+              }
+            },
+          });
+        if (frappe.user.has_role("Ticket Administrators"))
+          frm.call({
+            method: "obour_ticketing.queries.filter_assign_to_admins_checker",
+            args: { ticketing_group: frm.doc.ticketing_group },
+            callback: (response) => {
+              console.log("Authorized Users: ");
+              console.log(response.message);
+              if (response.message.includes(frm.doc.assign_to)) {
+                // console.log("Ok");
+                frm.call({
+                  method: "obour_ticketing.tasks.get_assignees",
+                  args: { docname: frm.doc.name },
+                  callback: function (response) {
+                    // if (frm.doc.assign_to) {
+                    frm.call({
+                      method: "frappe.desk.form.assign_to.add",
+                      args: {
+                        assign_to: [frm.doc.assign_to],
+                        doctype: "Issue",
+                        name: frm.doc.name,
+                      },
+                      callback(r) {
+                        frm.set_value("status", "In Progress");
+                        frm.refresh_fields();
+                        // frm.reload_doc();
+                      },
+                    });
+                    // }
+                  },
+                });
+              } else {
+                frm.doc.assign_to = "";
+                frm.doc.assign_to_full_name = "";
+                frm.refresh_fields();
+                // frappe.throw("No");
+              }
+            },
+          });
       } else {
         frm.doc.assign_to_full_name = "";
         frm.refresh_fields();
