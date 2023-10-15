@@ -467,28 +467,35 @@ frappe.ui.form.on("Issue", {
           callback: (response) => {
             console.log("Authorized Users: ");
             console.log(response.message);
-          },
-        });
-
-        frm.call({
-          method: "obour_ticketing.tasks.get_assignees",
-          args: { docname: frm.doc.name },
-          callback: function (response) {
-            // if (frm.doc.assign_to) {
-            frm.call({
-              method: "frappe.desk.form.assign_to.add",
-              args: {
-                assign_to: [frm.doc.assign_to],
-                doctype: "Issue",
-                name: frm.doc.name,
-              },
-              callback(r) {
-                frm.set_value("status", "In Progress");
-                frm.refresh_fields();
-                // frm.reload_doc();
-              },
-            });
-            // }
+            if (response.message.includes(frm.doc.assign_to)) {
+              // console.log("Ok");
+              frm.call({
+                method: "obour_ticketing.tasks.get_assignees",
+                args: { docname: frm.doc.name },
+                callback: function (response) {
+                  // if (frm.doc.assign_to) {
+                  frm.call({
+                    method: "frappe.desk.form.assign_to.add",
+                    args: {
+                      assign_to: [frm.doc.assign_to],
+                      doctype: "Issue",
+                      name: frm.doc.name,
+                    },
+                    callback(r) {
+                      frm.set_value("status", "In Progress");
+                      frm.refresh_fields();
+                      // frm.reload_doc();
+                    },
+                  });
+                  // }
+                },
+              });
+            } else {
+              frm.doc.assign_to = "";
+              frm.doc.assign_to_full_name = "";
+              frm.refresh_fields();
+              // frappe.throw("No");
+            }
           },
         });
       } else {
