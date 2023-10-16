@@ -14,7 +14,7 @@
  "is_standard": 1,
  "label": "Ticketing",
  "links": [],
- "modified": "2023-10-15 10:46:59.296522",
+ "modified": "2023-10-16 14:26:36.220839",
  "modified_by": "Administrator",
  "module": "Obour Ticketing",
  "name": "Ticketing",
@@ -25,9 +25,57 @@
   {
    "doc_view": "",
    "format": "{} Ticket/s",
+   "label": "All Tickets",
+   "link_to": "Issue",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "",
+   "format": "{} Ticket/s",
    "label": "Assigned to Me",
    "link_to": "Issue",
-   "stats_filter": "{\n    \"assign_to\": [\"=\", frappe.session.user],\n}",
+   "stats_filter": "{\n    \"assign_to\": [\"=\", frappe.session.user],\n    \"status\": [\"in\", ['In Progress', 'On Hold']],\n}",
+   "type": "DocType"
+  },
+  {
+   "color": "",
+   "doc_view": "",
+   "format": "{} Ticket/s",
+   "label": "Open",
+   "link_to": "Issue",
+   "stats_filter": "{\n    \"status\": [\"=\", 'Open'],\n}",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "",
+   "format": "{} Ticket/s",
+   "label": "Un Assigned",
+   "link_to": "Issue",
+   "stats_filter": "{\n    \"status\": [\"=\", 'Un Assigned'],\n}",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "",
+   "format": "{} Ticket/s",
+   "label": "Resolved",
+   "link_to": "Issue",
+   "stats_filter": "{\n    \"status\": [\"=\", 'Resolved'],\n}",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "",
+   "format": "{} Ticket/s",
+   "label": "On Hold",
+   "link_to": "Issue",
+   "stats_filter": "{\n    \"status\": [\"=\", 'On Hold'],\n}",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "",
+   "format": "{} Ticket/s",
+   "label": "Closed",
+   "link_to": "Issue",
+   "stats_filter": "{\n    \"status\": [\"=\", 'Closed'],\n}",
    "type": "DocType"
   },
   {

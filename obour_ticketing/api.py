@@ -360,7 +360,7 @@ def get_email_template(name, doc):
 
     return email_template.subject, message
 
-
+@frappe.whitelist()
 def detect_duplicates(
     childtable: List[Dict[str, Any]],
     key_field: str,

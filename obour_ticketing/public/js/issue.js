@@ -72,11 +72,11 @@ frappe.ui.form.on("Issue", {
             frm.doc.status != "Un Assigned" &&
             frm.doc.status != "Open"
           ) {
-            frm.set_df_property("assign_to", "reqd", 1);
+            // frm.set_df_property("assign_to", "reqd", 1);
           }
         });
 
-      if (frm.doc.assign_to && frm.doc.assign_to == frappe.session.user) {
+      if (frm.doc.assign_to && frm.doc.assign_to == frappe.session.user && frm.doc.status != "Resolved" && frm.doc.status != "Closed") {
         frm
           .add_custom_button(__("Hold Ticket"), () => {
             // frm.doc.status = "On Hold";
@@ -283,7 +283,9 @@ frappe.ui.form.on("Issue", {
     if (!frm.is_new()) {
       if (
         (assigned_users || []).includes(frappe.session.user) &&
-        !frappe.user.has_role("Ticket Administrators")
+        (frappe.user.has_role("Support Team") ||
+          frappe.user.has_role("Ticket Supervisors"))
+        && frm.doc.status != "Resolved" && frm.doc.status != "Closed"
       ) {
         frm.add_custom_button(__("Escalate..."), () => {
           frappe.call({
@@ -384,22 +386,6 @@ frappe.ui.form.on("Issue", {
     }
   },
 
-  //   before_validate(frm) {
-  //     if (!frm.is_new())
-  //       frm.call({
-  //         method: "obour_ticketing.tasks.get_assignees",
-  //         args: { docname: frm.doc.name },
-  //         callback: function (response) {
-  //           if (response.message) {
-  //             if (response.message[0] != frappe.session.user) {
-  //               frappe.throw(
-  //                 __("You can just view it since you are not assigned to it!")
-  //               );
-  //             }
-  //           }
-  //         },
-  //       });
-  //   },
 
   validate(frm) {
     // if (frm.doc.assign_to)
@@ -469,7 +455,7 @@ frappe.ui.form.on("Issue", {
               console.log("Authorized Users: ");
               console.log(response.message);
               if (response.message.includes(frm.doc.assign_to)) {
-                // console.log("Ok");
+                console.log("Ok");
                 frm.call({
                   method: "obour_ticketing.tasks.get_assignees",
                   args: { docname: frm.doc.name },
@@ -499,7 +485,7 @@ frappe.ui.form.on("Issue", {
               }
             },
           });
-        if (frappe.user.has_role("Ticket Supervisors"))
+        else if (frappe.user.has_role("Ticket Supervisors"))
           frm.call({
             method: "obour_ticketing.queries.filter_assign_to_supers_checker",
             args: { ticketing_group: frm.doc.ticketing_group },
@@ -507,7 +493,7 @@ frappe.ui.form.on("Issue", {
               console.log("Authorized Users: ");
               console.log(response.message);
               if (response.message.includes(frm.doc.assign_to)) {
-                // console.log("Ok");
+                console.log("Ok");
                 frm.call({
                   method: "obour_ticketing.tasks.get_assignees",
                   args: { docname: frm.doc.name },
@@ -537,7 +523,7 @@ frappe.ui.form.on("Issue", {
               }
             },
           });
-        if (frappe.user.has_role("Ticket Administrators"))
+        else (frappe.user.has_role("Ticket Administrators"))
           frm.call({
             method: "obour_ticketing.queries.filter_assign_to_admins_checker",
             args: { ticketing_group: frm.doc.ticketing_group },
@@ -545,7 +531,7 @@ frappe.ui.form.on("Issue", {
               console.log("Authorized Users: ");
               console.log(response.message);
               if (response.message.includes(frm.doc.assign_to)) {
-                // console.log("Ok");
+                console.log("Ok");
                 frm.call({
                   method: "obour_ticketing.tasks.get_assignees",
                   args: { docname: frm.doc.name },

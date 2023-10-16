@@ -88,10 +88,6 @@ fixtures = [
     },
 ]
 
-on_session_creation = [
-    "obour_ticketing.tasks.set_assgined_to_me_the_moment",
-]
-
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/obour_ticketing/css/obour_ticketing.css"
