@@ -19,7 +19,7 @@
  "is_standard": 1,
  "label": "Ticketing",
  "links": [],
- "modified": "2023-10-24 11:04:41.908649",
+ "modified": "2023-10-24 14:07:32.538356",
  "modified_by": "Administrator",
  "module": "Obour Ticketing",
  "name": "Ticketing",
@@ -42,6 +42,14 @@
    "label": "Assigned to Me",
    "link_to": "Issue",
    "stats_filter": "{\n    \"assign_to\": [\"=\", frappe.session.user],\n    \"status\": [\"in\", ['In Progress', 'On Hold']],\n}",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "",
+   "format": "{} Ticket/s",
+   "label": "Raised by Me",
+   "link_to": "Issue",
+   "stats_filter": "{\n    \"raised_by\": [\"=\", frappe.session.user],\n}",
    "type": "DocType"
   },
   {
