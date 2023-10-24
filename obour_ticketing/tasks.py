@@ -188,7 +188,7 @@ def set_response_resolution_status(issue):
 
 
 @frappe.whitelist()
-def create_notification_log(recipients, msg, doctype, doc) -> None:
+def create_notification_log(recipients, msg, doctype, doc, response=True) -> None:
     doc = frappe.get_doc(doctype, doc)
     doc_link = get_url_to_form(doctype, doc.name)
 
@@ -203,81 +203,112 @@ def create_notification_log(recipients, msg, doctype, doc) -> None:
         notify_log.document_type = doctype
         notify_log.document_name = doc.name
 
+        if response:
+            notify_log.first_respones_notify = 1
+        else:
+            notify_log.first_resolution_notify = 1
+
         notify_log.insert(ignore_permissions=True)
         frappe.db.commit()
 
 
-def notify_times():
+def first_notify_times():
     for iss in frappe.get_list("Issue", pluck="name"):
         iss = frappe.get_doc("Issue", iss)
         recipients = get_recipients(iss)
         if (
             iss.status == "Un Assigned" or iss.status == "Open"
-        ) and iss.creation <= iss.response_by:
-            # if frappe.db.exists(
-            #     "Notification Log",
-            #     frappe.get_all(
-            #         "Notification Log",
-            #         filters={
-            #             "document_type": "Issue",
-            #             "document_name": iss.name,
-            #         },
-            #         pluck="name",
-            #     )[0],
-            # ):
-            #     time.sleep(300)
-            #     create_notification_log(
-            #         ["Administrator"], "Response Time's Up!", "Issue", iss.name
-            #     )
-            #     frappe.sendmail(
-            #         recipients=["o.shehada@ard.ly"],
-            #         subject=f"Response Time's Up!",
-            #         message=f"Time's Up for Ticket {iss.name} for response time",
-            #         delayed=False,
-            #     )
-            # else:
+        ) and frappe.utils.get_datetime() >= iss.response_by:
+            if frappe.db.exists(
+                "Notification Log",
+                frappe.get_all(
+                    "Notification Log",
+                    filters={
+                        "document_type": "Issue",
+                        "document_name": iss.name,
+                        "first_respones_notify": 1,
+                    },
+                    pluck="name",
+                ),
+            ):
+                # create_notification_log(
+                #     recipients, "Response Alert Already Done!", "Issue", iss.name
+                # )
+                ...
+            else:
+                create_notification_log(
+                    recipients,
+                    f"Response Time's Up for Ticket {frappe.bold(iss.name)}!",
+                    "Issue",
+                    iss.name,
+                )
+            # frappe.sendmail(
+            #     recipients=recipients,
+            #     subject=f"Response Time's Up!",
+            #     message=f"Time's Up for Ticket {iss.name} for response time",
+            #     delayed=False,
+            # )
+        if (
+            iss.status == "Un Assigned" or iss.status == "Open"
+        ) and frappe.utils.get_datetime() >= iss.resolution_by:
+            if frappe.db.exists(
+                "Notification Log",
+                frappe.get_all(
+                    "Notification Log",
+                    filters={
+                        "document_type": "Issue",
+                        "document_name": iss.name,
+                        "first_resolution_notify": 1,
+                    },
+                    pluck="name",
+                ),
+            ):
+                # create_notification_log(
+                #     recipients,
+                #     "Resolution Alert Already Done!",
+                #     "Issue",
+                #     iss.name,
+                #     response=False,
+                # )
+                ...
+            else:
+                create_notification_log(
+                    recipients,
+                    f"Resolution Time's Up for Ticket {frappe.bold(iss.name)}!",
+                    "Issue",
+                    iss.name,
+                    response=False,
+                )
+            # frappe.sendmail(
+            #     recipients=recipients,
+            #     subject=f"Response Time's Up!",
+            #     message=f"Time's Up for Ticket {iss.name} for resolution time",
+            #     delayed=False,
+            # )
+
+
+def each_15_notify_times():
+    for iss in frappe.get_list("Issue", pluck="name"):
+        iss = frappe.get_doc("Issue", iss)
+        recipients = get_recipients(iss)
+        if (
+            iss.status == "Un Assigned" or iss.status == "Open"
+        ) and frappe.utils.get_datetime() >= iss.response_by:
             create_notification_log(
-                recipients, "Response Time's Up!", "Issue", iss.name
-            )
-            frappe.sendmail(
-                recipients=recipients,
-                subject=f"Response Time's Up!",
-                message=f"Time's Up for Ticket {iss.name} for response time",
-                delayed=False,
+                recipients,
+                f"Response Time's Up for Ticket {frappe.bold(iss.name)} with No Action, yet!",
+                "Issue",
+                iss.name,
             )
         if (
             iss.status == "Un Assigned" or iss.status == "Open"
-        ) and iss.creation <= iss.resolution_by:
-            # if frappe.db.exists(
-            #     "Notification Log",
-            #     frappe.get_all(
-            #         "Notification Log",
-            #         filters={
-            #             "document_type": "Issue",
-            #             "document_name": iss.name,
-            #         },
-            #         pluck="name",
-            #     )[0],
-            # ):
-            #     time.sleep(300)
-            #     create_notification_log(
-            #         ["Administrator"], "Resoultion Time's Up!", "Issue", iss.name
-            #     )
-            #     frappe.sendmail(
-            #         recipients=["o.shehada@ard.ly"],
-            #         subject=f"Resoultion Time's Up!",
-            #         message=f"Time's Up for Ticket {iss.name} for resolution time",
-            #         delayed=False,
-            #     )
-            # else:
+        ) and frappe.utils.get_datetime() >= iss.resolution_by:
             create_notification_log(
-                recipients, "Response Time's Up!", "Issue", iss.name
-            )
-            frappe.sendmail(
-                recipients=recipients,
-                subject=f"Response Time's Up!",
-                message=f"Time's Up for Ticket {iss.name} for response time",
-                delayed=False,
+                recipients,
+                f"Resolution Time's Up for Ticket {frappe.bold(iss.name)}  with No Action, yet!",
+                "Issue",
+                iss.name,
+                response=False,
             )
 
 

@@ -7,6 +7,7 @@ from typing import List, Dict, Any
 from frappe.utils import validate_email_address
 from frappe.desk.form.load import get_attachments
 import ast
+from frappe.email.doctype.email_queue.email_queue import send_now
 
 
 @frappe.whitelist()
@@ -361,6 +362,7 @@ def get_email_template(name, doc):
 
     return email_template.subject, message
 
+
 def detect_duplicates(
     childtable: List[Dict[str, Any]],
     key_field: str,
@@ -544,6 +546,7 @@ def escalate_to_admin(docname, from_user):
                     )
                 )
 
+
 @frappe.whitelist()
 def comment_portal(docname: str, comment: str, comment_by: str):
     frappe.get_doc(
@@ -560,9 +563,11 @@ def comment_portal(docname: str, comment: str, comment_by: str):
     ).insert(ignore_permissions=True)
     frappe.db.commit()
 
+
 @frappe.whitelist()
 def user_has_role(user_email: str, role: str) -> bool:
     return role in frappe.get_roles(user_email)
+
 
 @frappe.whitelist()
 def append_attachment(docname: str, attachments):
@@ -609,11 +614,20 @@ def is_ticket_master(user, ticketing_group, assign_to_user):
 
     if supers and not bool(admins) and is_current_user_admin:
         return False
-    
+
     if supers:
         return [1, 0]
 
     if admins:
         return [1, 1]
-    
+
     return False
+
+
+@frappe.whitelist()
+def send_mails():
+    not_sent_mails = frappe.get_all(
+        "Email Queue", filters={"status": "Not Sent"}, pluck="name"
+    )
+    for email in not_sent_mails:
+        send_now(email)

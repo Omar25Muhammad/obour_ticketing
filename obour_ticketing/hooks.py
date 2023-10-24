@@ -190,6 +190,7 @@ doc_events = {
         "after_insert": "obour_ticketing.api.add_ticket_role",
     },
     "Web Form": {"on_update": "obour_ticketing.api.set_file_max_size"},
+    "Email Queue": {"after_insert": "obour_ticketing.api.send_mails"},
 }
 
 # Scheduled Tasks
@@ -202,10 +203,11 @@ scheduler_events = {
     "daily": ["obour_ticketing.tasks.auto_close_tickets"],
     "cron": {
         "* * * * *": ["obour_ticketing.tasks.notify_times"],
-        # "0/15 * * * *": [
-        #     "obour_ticketing.tasks.send_slack_notification",
-        #     "obour_ticketing.tasks.set_response_resolution_status",
-        # ],
+        "0/15 * * * *": [
+            # "obour_ticketing.tasks.send_slack_notification",
+            # "obour_ticketing.tasks.set_response_resolution_status",
+            "obour_ticketing.tasks.each_15_notify_times"
+        ],
         "0 23 * * *": ["obour_ticketing.tasks.ticket_summary"],
     }
     # 	"weekly": [
