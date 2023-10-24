@@ -55,6 +55,9 @@ def get_permission_query_conditions(user):
     if "Customer" in roles or "Ticket Initiator" in roles:
         conditions.append("`tabIssue`.owner = '{}'".format(user))
 
+    # Add a condition to display issues for the owner
+    conditions.append("`tabIssue`.owner = '{}'".format(user))
+
     if conditions:
         return " OR ".join(conditions)
     else:
