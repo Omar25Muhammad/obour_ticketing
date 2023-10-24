@@ -4,10 +4,12 @@ frappe.ui.form.on("Issue", {
       console.log("omar was here");
       frm.refresh_fields();
       frappe.set_route("List", "Issue");
+      // location.reload();
     });
 
     frappe.realtime.on("reload_doc", (data) => {
       frm.reload_doc();
+      // location.reload();
     });
   },
   onload: function (frm) {
@@ -22,38 +24,46 @@ frappe.ui.form.on("Issue", {
     // $(".form-sidebar-stats").hide();
     // $(".list-unstyled.sidebar-menu.text-muted").hide();
 
-    if (Boolean(frappe.user.has_role("Support Team")))
-      frm.set_query("assign_to", function () {
-        return {
-          query: "obour_ticketing.queries.filter_assign_to_users",
-          filters: {
-            //   role: "Support Team",
-            ticketing_group: frm.doc.ticketing_group,
-          },
-        };
-      });
-
-    if (Boolean(frappe.user.has_role("Ticket Administrators")))
-      frm.set_query("assign_to", function () {
-        return {
-          query: "obour_ticketing.queries.filter_assign_to_admins",
-          filters: {
-            //   role: "Support Team",
-            ticketing_group: frm.doc.ticketing_group,
-          },
-        };
-      });
-
-    Boolean(frappe.user.has_role("Ticket Supervisors"));
     frm.set_query("assign_to", function () {
       return {
-        query: "obour_ticketing.queries.filter_assign_to_supers",
+        query: "obour_ticketing.queries.what_user_should_see",
         filters: {
           //   role: "Support Team",
           ticketing_group: frm.doc.ticketing_group,
+          user: frappe.session.user,
         },
       };
     });
+    // if (Boolean(frappe.user.has_role("Support Team")))
+    //   frm.set_query("assign_to", function () {
+    //     return {
+    //       query: "obour_ticketing.queries.filter_assign_to_users",
+    //       filters: {
+    //         //   role: "Support Team",
+    //         ticketing_group: frm.doc.ticketing_group,
+    //       },
+    //     };
+    //   });
+    // else if (Boolean(frappe.user.has_role("Ticket Administrators")))
+    //   frm.set_query("assign_to", function () {
+    //     return {
+    //       query: "obour_ticketing.queries.filter_assign_to_admins",
+    //       filters: {
+    //         //   role: "Support Team",
+    //         ticketing_group: frm.doc.ticketing_group,
+    //       },
+    //     };
+    //   });
+    // else if (Boolean(frappe.user.has_role("Ticket Supervisors")))
+    //   frm.set_query("assign_to", function () {
+    //     return {
+    //       query: "obour_ticketing.queries.filter_assign_to_supers",
+    //       filters: {
+    //         //   role: "Support Team",
+    //         ticketing_group: frm.doc.ticketing_group,
+    //       },
+    //     };
+    //   });
   },
   // refresh: async function (frm) {
   refresh: async function (frm) {
@@ -76,7 +86,12 @@ frappe.ui.form.on("Issue", {
           }
         });
 
-      if (frm.doc.assign_to && frm.doc.assign_to == frappe.session.user && frm.doc.status != "Resolved" && frm.doc.status != "Closed") {
+      if (
+        frm.doc.assign_to &&
+        frm.doc.assign_to == frappe.session.user &&
+        frm.doc.status != "Resolved" &&
+        frm.doc.status != "Closed"
+      ) {
         frm
           .add_custom_button(__("Hold Ticket"), () => {
             // frm.doc.status = "On Hold";
@@ -215,8 +230,17 @@ frappe.ui.form.on("Issue", {
     )
       frm.set_df_property("ticketing_group", "read_only", 1);
     if (frm.doc.assign_to) {
-      if (frappe.session.user != frm.doc.assign_to) {
-        frm.events.set_readonly(frm);
+      if (frappe.session.user != frm.doc.assign_to && frappe.session.user != 'Administrator') {
+        cur_frm.call({
+          method: "obour_ticketing.api.is_ticket_master",
+          args: {user: frappe.session.user, ticketing_group: frm.doc.ticketing_group, assign_to_user: frm.doc.assign_to},
+          callback: (r) => {
+            console.log(r.message)
+            if (!r.message)
+              frm.events.set_readonly(frm);
+          }
+      })
+        
       }
     }
     // remove create button
@@ -230,38 +254,46 @@ frappe.ui.form.on("Issue", {
     // $(".form-sidebar-stats").hide();
     // $(".list-unstyled.sidebar-menu.text-muted").hide();
 
-    if (Boolean(frappe.user.has_role("Support Team")))
-      frm.set_query("assign_to", function () {
-        return {
-          query: "obour_ticketing.queries.filter_assign_to_users",
-          filters: {
-            //   role: "Support Team",
-            ticketing_group: frm.doc.ticketing_group,
-          },
-        };
-      });
-
-    if (Boolean(frappe.user.has_role("Ticket Administrators")))
-      frm.set_query("assign_to", function () {
-        return {
-          query: "obour_ticketing.queries.filter_assign_to_admins",
-          filters: {
-            //   role: "Support Team",
-            ticketing_group: frm.doc.ticketing_group,
-          },
-        };
-      });
-
-    if (Boolean(frappe.user.has_role("Ticket Supervisors")))
-      frm.set_query("assign_to", function () {
-        return {
-          query: "obour_ticketing.queries.filter_assign_to_supers",
-          filters: {
-            //   role: "Support Team",
-            ticketing_group: frm.doc.ticketing_group,
-          },
-        };
-      });
+    frm.set_query("assign_to", function () {
+      return {
+        query: "obour_ticketing.queries.what_user_should_see",
+        filters: {
+          //   role: "Support Team",
+          ticketing_group: frm.doc.ticketing_group,
+          user: frappe.session.user,
+        },
+      };
+    });
+    // if (Boolean(frappe.user.has_role("Support Team")))
+    //   frm.set_query("assign_to", function () {
+    //     return {
+    //       query: "obour_ticketing.queries.filter_assign_to_users",
+    //       filters: {
+    //         //   role: "Support Team",
+    //         ticketing_group: frm.doc.ticketing_group,
+    //       },
+    //     };
+    //   });
+    // else if (Boolean(frappe.user.has_role("Ticket Administrators")))
+    //   frm.set_query("assign_to", function () {
+    //     return {
+    //       query: "obour_ticketing.queries.filter_assign_to_admins",
+    //       filters: {
+    //         //   role: "Support Team",
+    //         ticketing_group: frm.doc.ticketing_group,
+    //       },
+    //     };
+    //   });
+    // else if (Boolean(frappe.user.has_role("Ticket Supervisors")))
+    //   frm.set_query("assign_to", function () {
+    //     return {
+    //       query: "obour_ticketing.queries.filter_assign_to_supers",
+    //       filters: {
+    //         //   role: "Support Team",
+    //         ticketing_group: frm.doc.ticketing_group,
+    //       },
+    //     };
+    //   });
 
     // --------------------------
 
@@ -284,8 +316,9 @@ frappe.ui.form.on("Issue", {
       if (
         (assigned_users || []).includes(frappe.session.user) &&
         (frappe.user.has_role("Support Team") ||
-          frappe.user.has_role("Ticket Supervisors"))
-        && frm.doc.status != "Resolved" && frm.doc.status != "Closed"
+          frappe.user.has_role("Ticket Supervisors")) &&
+        frm.doc.status != "Resolved" &&
+        frm.doc.status != "Closed"
       ) {
         frm.add_custom_button(__("Escalate..."), () => {
           frappe.call({
@@ -294,7 +327,41 @@ frappe.ui.form.on("Issue", {
               docname: frm.doc.name,
             },
             callback: (r) => {
-              clearAssignToField();
+              // clearAssignToField();
+              frm.call({
+                method: "obour_ticketing.queries.current_user_escalate_to",
+                args: {
+                  user: frappe.session.user,
+                  ticketing_group: frm.doc.ticketing_group,
+                },
+                callback: (res) => {
+                  if (res.message == "Escalate to Supers") {
+                    frm.call({
+                      method: "obour_ticketing.tasks.clear_field_assign_to",
+                      args: { docname: frm.doc.name },
+                      callback: (r2) => {
+                        escalateIfNeeded(
+                          "Support Team",
+                          "Supervisor",
+                          "Escalating to Supervisors Group..."
+                        );
+                      },
+                    });
+                  } else if (res.message == "Escalate to Admins") {
+                    frm.call({
+                      method: "obour_ticketing.tasks.clear_field_assign_to",
+                      args: { docname: frm.doc.name },
+                      callback: (r2) => {
+                        escalateIfNeeded(
+                          "Ticket Supervisors",
+                          "Admin",
+                          "Escalating to Administrators Group..."
+                        );
+                      },
+                    });
+                  }
+                },
+              });
             },
           });
 
@@ -334,58 +401,10 @@ frappe.ui.form.on("Issue", {
               });
             }
           }
-          // frappe.call({
-          //   // method: "frappe.desk.form.assign_to.remove",
-          //   method: "obour_ticketing.tasks.get_assignees",
-          //   args: {
-          //     // doctype: frm.doctype,
-          //     // name: frm.docname,
-          //     // assign_to: frappe.session.user,
-          //     docname: frm.doc.name,
-          //   },
-          //   callback: (r) => {
-          //     frm.call({
-          //       method: "obour_ticketing.tasks.clear_field_assign_to",
-          //       args: { docname: frm.doc.name },
-          //       callback: (r2) => {
-          //         // frm.reload_doc();
-          //         /*
-          //     Now Esclate to Supers
-          //     */
-          //         if (frappe.user.has_role("Support Team"))
-          //           frm.call({
-          //             method: "obour_ticketing.api.esclate_to_supervisor",
-          //             args: { docname: frm.doc.name },
-          //             freeze: true,
-          //             freeze_message: __("Esclating to Supervisors Group..."),
-
-          //             callback: (r3) => {
-          //               frm.reload_doc();
-          //             },
-          //           });
-
-          //         if (frappe.user.has_role("Ticket Supervisors"))
-          //           frm.call({
-          //             method: "obour_ticketing.api.esclate_to_admin",
-          //             args: { docname: frm.doc.name },
-          //             freeze: true,
-          //             freeze_message: __(
-          //               "Esclating to Administrators Group..."
-          //             ),
-
-          //             callback: (r3) => {
-          //               frm.reload_doc();
-          //             },
-          //           });
-          //       },
-          //     });
-          //   },
-          // });
         });
       }
     }
   },
-
 
   validate(frm) {
     // if (frm.doc.assign_to)
@@ -399,6 +418,9 @@ frappe.ui.form.on("Issue", {
       if (frappe.session.user != frm.doc.assign_to) {
         frm.events.set_readonly(frm);
       }
+    } else {
+      frm.doc.status = "Open";
+      frm.refresh_fields();
     }
     // if (!frm.is_new() && frm.doc.ticketing_group) {
     //   frm.call({
@@ -417,7 +439,19 @@ frappe.ui.form.on("Issue", {
     //     if (ticketing_group != frm.doc.ticketing_group) {
     //     }
     //   });
+
+    frappe.db
+      .get_value("Issue", frm.doc.name, "assign_to")
+      .then(function (response) {
+        let assign_to = response.message.assign_to;
+        // if (assign_to != null && assign_to != frm.doc.assign_to) {
+        if (assign_to != frm.doc.assign_to) {
+          frm.events.assign_to_function(frm);
+          // frm.set_df_property("assign_to", "reqd", 1);
+        }
+      });
   },
+
   set_readonly(frm) {
     // $.each(frm.fields_dict, function (fieldname, field) {
     frm.set_df_property("subject", "read_only", 1);
@@ -444,126 +478,39 @@ frappe.ui.form.on("Issue", {
     //   }
     // });
   },
-  assign_to(frm) {
+  assign_to_function(frm) {
     if (!frm.is_new())
       if (frm.doc.assign_to) {
-        if (frappe.user.has_role("Support Team"))
-          frm.call({
-            method: "obour_ticketing.queries.filter_assign_to_users_checker",
-            args: { ticketing_group: frm.doc.ticketing_group },
-            callback: (response) => {
-              console.log("Authorized Users: ");
-              console.log(response.message);
-              if (response.message.includes(frm.doc.assign_to)) {
-                console.log("Ok");
-                frm.call({
-                  method: "obour_ticketing.tasks.get_assignees",
-                  args: { docname: frm.doc.name },
-                  callback: function (response) {
-                    // if (frm.doc.assign_to) {
-                    frm.call({
-                      method: "frappe.desk.form.assign_to.add",
-                      args: {
-                        assign_to: [frm.doc.assign_to],
-                        doctype: "Issue",
-                        name: frm.doc.name,
-                      },
-                      callback(r) {
-                        frm.set_value("status", "In Progress");
-                        frm.refresh_fields();
-                        // frm.reload_doc();
-                      },
-                    });
-                    // }
-                  },
-                });
-              } else {
-                frm.doc.assign_to = "";
-                frm.doc.assign_to_full_name = "";
+        frm.call({
+          method: "obour_ticketing.tasks.get_assignees",
+          args: { docname: frm.doc.name },
+          callback: function (response) {
+            // if (frm.doc.assign_to) {
+            frm.call({
+              method: "frappe.desk.form.assign_to.add",
+              args: {
+                assign_to: [frm.doc.assign_to],
+                doctype: "Issue",
+                name: frm.doc.name,
+              },
+              callback(r) {
+                frm.set_value("status", "In Progress");
                 frm.refresh_fields();
-                // frappe.throw("No");
-              }
-            },
-          });
-        else if (frappe.user.has_role("Ticket Supervisors"))
-          frm.call({
-            method: "obour_ticketing.queries.filter_assign_to_supers_checker",
-            args: { ticketing_group: frm.doc.ticketing_group },
-            callback: (response) => {
-              console.log("Authorized Users: ");
-              console.log(response.message);
-              if (response.message.includes(frm.doc.assign_to)) {
-                console.log("Ok");
-                frm.call({
-                  method: "obour_ticketing.tasks.get_assignees",
-                  args: { docname: frm.doc.name },
-                  callback: function (response) {
-                    // if (frm.doc.assign_to) {
-                    frm.call({
-                      method: "frappe.desk.form.assign_to.add",
-                      args: {
-                        assign_to: [frm.doc.assign_to],
-                        doctype: "Issue",
-                        name: frm.doc.name,
-                      },
-                      callback(r) {
-                        frm.set_value("status", "In Progress");
-                        frm.refresh_fields();
-                        // frm.reload_doc();
-                      },
-                    });
-                    // }
-                  },
-                });
-              } else {
-                frm.doc.assign_to = "";
-                frm.doc.assign_to_full_name = "";
-                frm.refresh_fields();
-                // frappe.throw("No");
-              }
-            },
-          });
-        else (frappe.user.has_role("Ticket Administrators"))
-          frm.call({
-            method: "obour_ticketing.queries.filter_assign_to_admins_checker",
-            args: { ticketing_group: frm.doc.ticketing_group },
-            callback: (response) => {
-              console.log("Authorized Users: ");
-              console.log(response.message);
-              if (response.message.includes(frm.doc.assign_to)) {
-                console.log("Ok");
-                frm.call({
-                  method: "obour_ticketing.tasks.get_assignees",
-                  args: { docname: frm.doc.name },
-                  callback: function (response) {
-                    // if (frm.doc.assign_to) {
-                    frm.call({
-                      method: "frappe.desk.form.assign_to.add",
-                      args: {
-                        assign_to: [frm.doc.assign_to],
-                        doctype: "Issue",
-                        name: frm.doc.name,
-                      },
-                      callback(r) {
-                        frm.set_value("status", "In Progress");
-                        frm.refresh_fields();
-                        // frm.reload_doc();
-                      },
-                    });
-                    // }
-                  },
-                });
-              } else {
-                frm.doc.assign_to = "";
-                frm.doc.assign_to_full_name = "";
-                frm.refresh_fields();
-                // frappe.throw("No");
-              }
-            },
-          });
+                // frm.reload_doc();
+                location.reload();
+              },
+            });
+          },
+        });
       } else {
+        frm.call({
+          method: "obour_ticketing.tasks.get_assignees",
+          args: { docname: frm.doc.name },
+          callback: function (response) {},
+        });
         frm.doc.assign_to_full_name = "";
         frm.refresh_fields();
+        location.reload();
       }
   },
 

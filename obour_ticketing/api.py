@@ -6,6 +6,7 @@ from obour_ticketing.tasks import send
 from typing import List, Dict, Any
 from frappe.utils import validate_email_address
 from frappe.desk.form.load import get_attachments
+import ast
 
 
 @frappe.whitelist()
@@ -360,7 +361,6 @@ def get_email_template(name, doc):
 
     return email_template.subject, message
 
-@frappe.whitelist()
 def detect_duplicates(
     childtable: List[Dict[str, Any]],
     key_field: str,
@@ -544,7 +544,6 @@ def escalate_to_admin(docname, from_user):
                     )
                 )
 
-
 @frappe.whitelist()
 def comment_portal(docname: str, comment: str, comment_by: str):
     frappe.get_doc(
@@ -561,7 +560,60 @@ def comment_portal(docname: str, comment: str, comment_by: str):
     ).insert(ignore_permissions=True)
     frappe.db.commit()
 
-
 @frappe.whitelist()
 def user_has_role(user_email: str, role: str) -> bool:
     return role in frappe.get_roles(user_email)
+
+@frappe.whitelist()
+def append_attachment(docname: str, attachments):
+    """Append comments' attachments of portal to attachments table"""
+    doc = frappe.get_doc("Issue", docname)
+
+    for attachment in ast.literal_eval(attachments):
+        doc.append("attachments", {"attachment": attachment})
+
+    doc.save()
+    frappe.db.commit()
+
+
+@frappe.whitelist()
+def is_ticket_master(user, ticketing_group, assign_to_user):
+    if user == "Administrator":
+        return
+
+    # For Supers
+    supers = frappe.get_all(
+        "Ticketing Supervisor Table",
+        filters={"parent": ticketing_group, "supervisor_email": user},
+        pluck="supervisor_email",
+    )
+
+    is_current_user_super = frappe.get_all(
+        "Ticketing Supervisor Table",
+        filters={"parent": ticketing_group, "supervisor_email": assign_to_user},
+        pluck="supervisor_email",
+    )
+
+    # For Admins
+    admins = frappe.get_all(
+        "Ticketing Administrator Table",
+        filters={"parent": ticketing_group, "admin_email": user},
+        pluck="admin_email",
+    )
+
+    is_current_user_admin = frappe.get_all(
+        "Ticketing Administrator Table",
+        filters={"parent": ticketing_group, "admin_email": assign_to_user},
+        pluck="admin_email",
+    )
+
+    if supers and not bool(admins) and is_current_user_admin:
+        return False
+    
+    if supers:
+        return [1, 0]
+
+    if admins:
+        return [1, 1]
+    
+    return False

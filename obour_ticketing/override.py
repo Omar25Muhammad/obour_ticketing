@@ -61,6 +61,8 @@ class CustomIssue(Issue):
             self.doctype, self.name, "ticketing_group", self.ticketing_group
         )
         new_ticketing_group = self.ticketing_group
+        # frappe.msgprint(f"Old: {old_ticketing_group}")
+        # frappe.msgprint(f"New: {new_ticketing_group}")
         if (
             self.modified_by not in {self.raised_by, "Administrator"}
             and self.status == "Un Assigned"

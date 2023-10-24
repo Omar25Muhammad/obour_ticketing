@@ -1,6 +1,11 @@
 {
  "category": "Modules",
- "charts": [],
+ "charts": [
+  {
+   "chart_name": "All Tickets",
+   "label": "All Tickets"
+  }
+ ],
  "creation": "2023-05-30 11:27:18.532039",
  "developer_mode_only": 0,
  "disable_user_customization": 0,
@@ -14,7 +19,7 @@
  "is_standard": 1,
  "label": "Ticketing",
  "links": [],
- "modified": "2023-10-16 14:26:36.220839",
+ "modified": "2023-10-24 11:04:41.908649",
  "modified_by": "Administrator",
  "module": "Obour Ticketing",
  "name": "Ticketing",
@@ -25,8 +30,10 @@
   {
    "doc_view": "",
    "format": "{} Ticket/s",
+   "icon": "support",
    "label": "All Tickets",
    "link_to": "Issue",
+   "stats_filter": "{\n    \"status\": [\"in\", ['Open', 'Un Assigned', 'In Progress', 'On Hold', 'Resolved', 'Closed']],\n}",
    "type": "DocType"
   },
   {

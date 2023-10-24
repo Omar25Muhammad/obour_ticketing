@@ -211,7 +211,9 @@ def notify_times():
     for iss in frappe.get_list("Issue", pluck="name"):
         iss = frappe.get_doc("Issue", iss)
         recipients = get_recipients(iss)
-        if (iss.status == "Un Assigned" or iss.status == "Open") and iss.creation <= iss.response_by:
+        if (
+            iss.status == "Un Assigned" or iss.status == "Open"
+        ) and iss.creation <= iss.response_by:
             # if frappe.db.exists(
             #     "Notification Log",
             #     frappe.get_all(
@@ -237,13 +239,15 @@ def notify_times():
             create_notification_log(
                 recipients, "Response Time's Up!", "Issue", iss.name
             )
-            # frappe.sendmail(
-            #     recipients=recipients,
-            #     subject=f"Response Time's Up!",
-            #     message=f"Time's Up for Ticket {iss.name} for response time",
-            #     delayed=False,
-            # )
-        if (iss.status == "Un Assigned" or iss.status == "Open") and iss.creation <= iss.resolution_by:
+            frappe.sendmail(
+                recipients=recipients,
+                subject=f"Response Time's Up!",
+                message=f"Time's Up for Ticket {iss.name} for response time",
+                delayed=False,
+            )
+        if (
+            iss.status == "Un Assigned" or iss.status == "Open"
+        ) and iss.creation <= iss.resolution_by:
             # if frappe.db.exists(
             #     "Notification Log",
             #     frappe.get_all(
@@ -267,14 +271,14 @@ def notify_times():
             #     )
             # else:
             create_notification_log(
-                recipients, "Resolution Time's Up!", "Issue", iss.name
+                recipients, "Response Time's Up!", "Issue", iss.name
             )
-            # frappe.sendmail(
-            #     recipients=recipients,
-            #     subject=f"Response Time's Up!",
-            #     message=f"Time's Up for Ticket {iss.name} for response time",
-            #     delayed=False,
-            # )
+            frappe.sendmail(
+                recipients=recipients,
+                subject=f"Response Time's Up!",
+                message=f"Time's Up for Ticket {iss.name} for response time",
+                delayed=False,
+            )
 
 
 @frappe.whitelist()
@@ -312,6 +316,8 @@ def reload_page(event: str):
 def clear_field_assign_to(docname):
     iss = frappe.get_doc("Issue", docname)
     frappe.db.set_value(iss.doctype, iss.name, "assign_to", "")
+    if iss.status == "On Hold":
+        frappe.db.set_value(iss.doctype, iss.name, "status", "In Progress")
     frappe.db.commit()
 
 

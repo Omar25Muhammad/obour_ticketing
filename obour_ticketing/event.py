@@ -18,8 +18,6 @@ def get_permission_query_conditions(user):
     user_ticketing_group = ",".join(
         ["'{}'".format(group) for group in user_ticketing_group]
     )
-    if user_ticketing_group:
-        return """`tabIssue`.ticketing_group in ({})""".format(user_ticketing_group)
 
     super_ticketing_group = frappe.get_all(
         "Ticketing Supervisor Table", filters={"supervisor_email": user}, pluck="parent"
@@ -27,8 +25,6 @@ def get_permission_query_conditions(user):
     super_ticketing_group = ",".join(
         ["'{}'".format(group) for group in super_ticketing_group]
     )
-    if super_ticketing_group:
-        return """`tabIssue`.ticketing_group in ({})""".format(super_ticketing_group)
 
     admin_ticketing_group = frappe.get_all(
         "Ticketing Administrator Table", filters={"admin_email": user}, pluck="parent"
@@ -36,13 +32,32 @@ def get_permission_query_conditions(user):
     admin_ticketing_group = ",".join(
         ["'{}'".format(group) for group in admin_ticketing_group]
     )
-    if admin_ticketing_group:
-        return """`tabIssue`.ticketing_group in ({})""".format(admin_ticketing_group)
 
+    roles = [r.role for r in frappe.get_doc("User", user).roles]
+
+    conditions = []
+
+    if user_ticketing_group:
+        conditions.append(
+            "`tabIssue`.ticketing_group in ({})".format(user_ticketing_group)
+        )
+
+    if super_ticketing_group:
+        conditions.append(
+            "`tabIssue`.ticketing_group in ({})".format(super_ticketing_group)
+        )
+
+    if admin_ticketing_group:
+        conditions.append(
+            "`tabIssue`.ticketing_group in ({})".format(admin_ticketing_group)
+        )
+
+    if "Customer" in roles or "Ticket Initiator" in roles:
+        conditions.append("`tabIssue`.owner = '{}'".format(user))
+
+    if conditions:
+        return " OR ".join(conditions)
     else:
-        roles = [r.role for r in frappe.get_doc("User", user).roles]
-        if "Customer" in roles or "Ticket Initiator" in roles:
-            return """`tabIssue`.owner = '{}'""".format(user)
         return "1=1"
 
 
