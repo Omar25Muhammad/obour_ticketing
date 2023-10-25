@@ -167,6 +167,7 @@ override_doctype_class = {
     # "ToDo": "custom_app.overrides.CustomToDo",
     "Issue": "obour_ticketing.override.CustomIssue",
     "Web Form": "obour_ticketing.override.CustomWebForm",
+    # "Email Queue": "obour_ticketing.override.CustomEmailQueue",
 }
 
 # Document Events
@@ -179,6 +180,7 @@ doc_events = {
         "after_insert": [
             "obour_ticketing.api.send_email_issue_initiator",
             "obour_ticketing.api.send_email_ticket_group",
+            "obour_ticketing.api.send_slack_notification",
         ],
         "on_update": [
             "obour_ticketing.api.send_email_issue_status",
@@ -190,7 +192,7 @@ doc_events = {
         "after_insert": "obour_ticketing.api.add_ticket_role",
     },
     "Web Form": {"on_update": "obour_ticketing.api.set_file_max_size"},
-    "Email Queue": {"after_insert": "obour_ticketing.api.send_mails"},
+    # "Email Queue": {"after_insert": ["obour_ticketing.api.send_mails"]},
 }
 
 # Scheduled Tasks

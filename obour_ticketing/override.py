@@ -3,13 +3,14 @@
 
 from erpnext.support.doctype.issue.issue import Issue
 from frappe.website.doctype.web_form.web_form import WebForm
+from frappe.email.doctype.email_queue.email_queue import EmailQueue
 import frappe
 from frappe import _
 from frappe.utils import cint, escape_html
 from bs4 import BeautifulSoup
 from frappe.desk.form.load import get_attachments
 from obour_ticketing.tasks import reload_page, get_assignees, clear_field_assign_to
-from obour_ticketing.api import send_email_ticket_group
+from obour_ticketing.api import send_email_ticket_group, send_mails
 
 
 class CustomIssue(Issue):
@@ -362,3 +363,8 @@ def extract_imgs_and_p(row):
     for p in p_tags:
         row["content"] += p.get_text()
         return row.content, row.attachments
+
+
+class CustomEmailQueue(EmailQueue):
+    def db_insert(self):
+        send_mails()

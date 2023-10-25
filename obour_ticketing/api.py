@@ -137,8 +137,9 @@ def send_email_issue_initiator(doc, method):
                 recipients=[frappe.session.user],
                 subject="New Ticket Raised",
                 message=message,
-                delayed=False,
+                # delayed=False,
             )
+            # send_mails()
         except Exception as e:
             frappe.log_error(str(e), "Email sending failed while raising new ticket")
             frappe.msgprint(
@@ -158,7 +159,7 @@ def send_email_issue_initiator(doc, method):
                         recipients=[account_manager_email],
                         subject="New Ticket Raised from Your Customer",
                         message=message,
-                        delayed=False,
+                        # delayed=False,
                     )
                 except Exception as e:
                     frappe.log_error(
@@ -184,9 +185,10 @@ def send_email_ticket_group(doc, method):
                 recipients=recipients,
                 subject=subject,
                 message=message,
-                delayed=False,
+                # delayed=False,
                 # attachments=attachments,
             )
+            # send_mails()
         except Exception as e:
             frappe.log_error(str(e), "Email sending failed while raising new ticket")
             frappe.msgprint(
@@ -221,7 +223,7 @@ def send_email_issue_status(doc, method):
             subject, message = get_email_template("Ticket Closed", doc)
 
     if subject and message and len(recipients) > 0:
-        sendmail(recipients=recipients, subject=subject, message=message, delayed=False)
+        sendmail(recipients=recipients, subject=subject, message=message)
 
 
 def send_notification(doc, method):
@@ -257,14 +259,15 @@ def send_notification(doc, method):
 def send_slack_notification(doc, method):
     url = frappe.db.get_value("Ticketing Groups", doc.ticketing_group, "slack_url")
     if not url:
-        frappe.msgprint(
-            _("Failed to send message to Slack. Please Set Slack Webhook URL in Group"),
-            alert=True,
-        )
+        # frappe.msgprint(
+        #     _("Failed to send message to Slack. Please Set Slack Webhook URL in Group"),
+        #     alert=True,
+        # )
         return
 
-    msg = f"Ticket: {doc.name} updated ... "
-    send(url, msg)
+    # msg = f"Ticket: {doc.name} updated ... "
+    subject, message = get_email_template("New Ticket", doc)
+    send(url, message)
 
 
 def update_website_context(context):
