@@ -208,19 +208,35 @@ def send_email_issue_status(doc, method):
     subject = ""
     message = ""
     recipients = get_recipients(doc)
+    url = frappe.db.get_value("Ticketing Groups", doc.ticketing_group, "slack_url")
+    if not url:
+        # frappe.msgprint(
+        #     _("Failed to send message to Slack. Please Set Slack Webhook URL in Group"),
+        #     alert=True,
+        # )
+        return
+
+    # msg = f"Ticket: {doc.name} updated ... "
+    # subject, message = get_email_template("New Ticket", doc)
+    # send(url, message)
+
     if doc.raised_by:
         recipients.append(doc.raised_by)
 
     # case: user decline the ticket
     if prev_status in ("Closed", "Resolved") and current_status == "In Progress":
         subject, message = get_email_template("Ticket Declined", doc)
+        send(url, message)
+        
 
     elif current_status != prev_status and prev_status != "Closed":
         if current_status == "Resolved":
             subject, message = get_email_template("Ticket Resolved", doc)
+            send(url, message)
 
         elif current_status == "Closed":
             subject, message = get_email_template("Ticket Closed", doc)
+            send(url, message)
 
     if subject and message and len(recipients) > 0:
         sendmail(recipients=recipients, subject=subject, message=message)

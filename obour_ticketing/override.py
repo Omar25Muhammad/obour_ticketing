@@ -64,15 +64,25 @@ class CustomIssue(Issue):
         new_ticketing_group = self.ticketing_group
         # frappe.msgprint(f"Old: {old_ticketing_group}")
         # frappe.msgprint(f"New: {new_ticketing_group}")
-        if (
-            self.modified_by not in {self.raised_by, "Administrator"}
-            and self.status == "Un Assigned"
-            and old_ticketing_group == new_ticketing_group
-        ):
-            # self.status = "Open"
-            frappe.db.set_value(self.doctype, self.name, "status", "Open")
-            frappe.db.commit()
-            frappe.publish_realtime(event="reload_doc")
+        if old_ticketing_group:
+            if (
+                self.modified_by not in {self.raised_by, "Administrator"}
+                and self.status == "Un Assigned"
+                and old_ticketing_group == new_ticketing_group
+            ):
+                # self.status = "Open"
+                frappe.db.set_value(self.doctype, self.name, "status", "Open")
+                frappe.db.commit()
+                frappe.publish_realtime(event="reload_doc")
+        else:
+            if (
+                self.modified_by not in {self.raised_by, "Administrator"}
+                and self.status == "Un Assigned"
+            ):
+                # self.status = "Open"
+                frappe.db.set_value(self.doctype, self.name, "status", "Open")
+                frappe.db.commit()
+                frappe.publish_realtime(event="reload_doc")
 
     # def after_save(self):
     #     old_assign_to = frappe.db.get_value(
@@ -140,15 +150,16 @@ class CustomIssue(Issue):
                 )
                 < 0
             ):
-                self.agreement_status = "Failed"
-                # Added by Eng. Omar
-                if len(emails) > 0:
-                    frappe.sendmail(
-                        recipients=emails,
-                        subject="Failed Issue!",
-                        message=f"Issue with ID: {self.name} raised by {self.raised_by} has failed!",
-                        delayed=False,
-                    )
+                # self.agreement_status = "Failed"
+                # # Added by Eng. Omar
+                # if len(emails) > 0:
+                #     frappe.sendmail(
+                #         recipients=emails,
+                #         subject="Failed Issue!",
+                #         message=f"Issue with ID: {self.name} raised by {self.raised_by} has failed!",
+                #         delayed=False,
+                #     )
+                ...
 
             # End Added by Eng. Omar
         else:

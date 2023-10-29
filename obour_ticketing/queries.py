@@ -159,6 +159,8 @@ def filter_assign_to_supers_checker(ticketing_group: str):
 def what_user_should_see(doctype, txt, searchfield, start, page_len, filters):
     user = filters.get("user")
     ticketing_group = filters.get("ticketing_group")
+    raised_by_user = filters.get("raised_by")
+    # raised_by_user = 'hd.agent1@mail.ly'
 
     if user == "Administrator":
         return "We are not counting Administrator"
@@ -201,33 +203,12 @@ def what_user_should_see(doctype, txt, searchfield, start, page_len, filters):
         all_levels.append("Admins")
 
     if "Admins" in all_levels:
-        # all_users.extend(
-        #     frappe.get_all(
-        #         "Ticketing Administrator Table",
-        #         filters={"parent": ticketing_group},
-        #         pluck="admin_email",
-        #     )
-        # )
-        # all_users.extend(
-        #     frappe.get_all(
-        #         "Ticketing Supervisor Table",
-        #         filters={"parent": ticketing_group},
-        #         pluck="supervisor_email",
-        #     )
-        # )
-        # all_users.extend(
-        #     frappe.get_all(
-        #         "Ticketing User Table",
-        #         filters={"parent": ticketing_group},
-        #         pluck="user_email",
-        #     )
-        # )
-        # return list(set(all_users))
-
         query = f"""
             SELECT user_email, user_name
             FROM `tabTicketing User Table`
             WHERE parent='{ticketing_group}'
+            AND
+            user_email != '{raised_by_user}'
             AND 
             (user_email LIKE '%{txt}%'
             OR user_name LIKE '%{txt}%')
@@ -235,14 +216,18 @@ def what_user_should_see(doctype, txt, searchfield, start, page_len, filters):
             SELECT supervisor_email, supervisor_name
             FROM `tabTicketing Supervisor Table` 
             WHERE parent='{ticketing_group}'
-            AND 
+            AND
+            supervisor_email != '{raised_by_user}'
+            AND
             (supervisor_email LIKE '%{txt}%'
             OR supervisor_name LIKE '%{txt}%')
             UNION
             SELECT admin_email, admin_name
             FROM `tabTicketing Administrator Table` 
             WHERE parent='{ticketing_group}'
-            AND 
+            AND
+            admin_email != '{raised_by_user}'
+            AND
             (admin_email LIKE '%{txt}%'
             OR admin_name LIKE '%{txt}%');
         """
@@ -250,33 +235,21 @@ def what_user_should_see(doctype, txt, searchfield, start, page_len, filters):
         return frappe.db.sql(query)
 
     elif "Supers" in all_levels:
-        # all_users.extend(
-        #     frappe.get_all(
-        #         "Ticketing Supervisor Table",
-        #         filters={"parent": ticketing_group},
-        #         pluck="supervisor_email",
-        #     )
-        # )
-        # all_users.extend(
-        #     frappe.get_all(
-        #         "Ticketing User Table",
-        #         filters={"parent": ticketing_group},
-        #         pluck="user_email",
-        #     )
-        # )
-        # return list(set(all_users))
-
         query = f"""
             SELECT user_email, user_name
             FROM `tabTicketing User Table`
             WHERE parent='{ticketing_group}'
-            AND 
+            AND
+            user_email != '{raised_by_user}'
+            AND  
             (user_email LIKE '%{txt}%'
             OR user_name LIKE '%{txt}%')
             UNION
             SELECT supervisor_email, supervisor_name
             FROM `tabTicketing Supervisor Table` 
             WHERE parent='{ticketing_group}'
+            AND
+            supervisor_email != '{raised_by_user}'
             AND 
             (supervisor_email LIKE '%{txt}%'
             OR supervisor_name LIKE '%{txt}%');
@@ -286,19 +259,12 @@ def what_user_should_see(doctype, txt, searchfield, start, page_len, filters):
 
     # if "Techs" in all_levels:
     elif "Techs" in all_levels:
-        # all_users.extend(
-        #     frappe.get_all(
-        #         "Ticketing User Table",
-        #         filters={"parent": ticketing_group},
-        #         pluck="user_email",
-        #     )
-        # )
-        # return list(set(all_users))
-
         query = f"""
         SELECT user_email, user_name
         FROM `tabTicketing User Table`
         WHERE parent='{ticketing_group}'
+        AND
+        user_email != '{raised_by_user}'
         AND 
         (user_email LIKE '%{txt}%'
         OR user_name LIKE '%{txt}%');
