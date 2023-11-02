@@ -901,7 +901,7 @@ frappe.ui.form.on("Issue", {
 
     if (frm.doc.status == 'Resolved' || frm.doc.status == 'Closed') {
       // frm.remove_custom_button("Send Comment to User");
-      frm.events.set_readonly(frm);
+      // frm.events.set_readonly(frm);
     }
     // remove create button
     frm.remove_custom_button("Task", "Create");
